@@ -1,13 +1,30 @@
-import { Stack } from "expo-router";
+import { getLanguage } from "@/utils/getLanguage";
+import { Stack, useRootNavigationState, useRouter } from "expo-router";
+import { useEffect } from "react";
 
 export default function RootLayout() {
+  const router = useRouter();
+  const navigationState = useRootNavigationState();
+
+  useEffect(() => {
+    if (!navigationState?.key) return;
+    checkLanguage();
+  }, [navigationState?.key]);
+
+  const checkLanguage = async () => {
+    try {
+      if (!getLanguage) {
+        router.replace("/onboarding/language_selection");
+      }
+    } catch (error) {
+      console.error("Error checking language:", error);
+    }
+  };
+
   return (
-    <Stack>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen
-        name="onboarding/language_selection"
-        options={{ headerShown: false }}
-      />
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="onboarding/language_selection" />
+      <Stack.Screen name="(tabs)" />
     </Stack>
   );
 }

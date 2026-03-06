@@ -1,11 +1,56 @@
+import { getLanguage } from "@/utils/getLanguage";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Chip } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Divider from "../../components/divider_line";
 
 export default function Index() {
+  const [language, setLanguage] = useState<string | null>();
+  useEffect(() => {
+    loadLanguage();
+  }, []);
+  const loadLanguage = async () => {
+    const lang = await getLanguage();
+    setLanguage(lang);
+  };
+
+  const getText = () => {
+    if (language === "ar") {
+      return {
+        title: "ابحث عن الصيدليات",
+        subtitle: "صيدليات المناوبة - صيدليات الليل...إلخ",
+        autoTitle: "البحث التلقائي",
+        autoSubtitle: "يبحث تلقائياً عن الصيدليات القريبة منك",
+        manualTitle: "البحث اليدوي",
+        manualSubtitle: "البحث حسب المنطقة/المدينة",
+        autoBadge: "Auto",
+      };
+    } else if (language === "fr") {
+      return {
+        title: "Rechercher des pharmacies",
+        subtitle: "Pharmacies de garde - Pharmacies de nuit...etc",
+        autoTitle: "Recherche automatique",
+        autoSubtitle: "Recherche automatiquement les pharmacies près de vous",
+        manualTitle: "Recherche manuelle",
+        manualSubtitle: "Rechercher par région/ville",
+        autoBadge: "Auto",
+      };
+    } else {
+      return {
+        title: "Search for pharmacies",
+        subtitle: "On-call pharmacies - Night pharmacies...etc",
+        autoTitle: "Auto Search",
+        autoSubtitle: "It automatically searches for pharmacies near you",
+        manualTitle: "Manual search",
+        manualSubtitle: "Search by region/city",
+        autoBadge: "Auto",
+      };
+    }
+  };
+
+  const text = getText();
   const router = useRouter();
   return (
     <SafeAreaView style={styles.screen_container}>
@@ -17,11 +62,9 @@ export default function Index() {
         <Text style={styles.logo_title}>DawaMZ</Text>
       </View>
       <View style={styles.header_section}>
-        <Text style={styles.page_title}>Search for pharmacies</Text>
+        <Text style={styles.page_title}>{text.title}</Text>
         <Divider />
-        <Text style={styles.page_subtitle}>
-          On-call pharmacies - Night pharmacies...etc.
-        </Text>
+        <Text style={styles.page_subtitle}>{text.subtitle}</Text>
       </View>
       <View style={styles.search_cards_container}>
         <TouchableOpacity>
@@ -36,20 +79,14 @@ export default function Index() {
             </View>
 
             <View style={styles.card_text_section}>
-              <Text style={styles.card_title}>Auto Search</Text>
+              <Text style={styles.card_title}>{text.autoTitle}</Text>
               <Divider style={{ marginVertical: 3 }} />
-              <Text style={styles.card_subtitle}>
-                It automatically searches for pharmacies near you.
-              </Text>
+              <Text style={styles.card_subtitle}>{text.autoSubtitle}</Text>
             </View>
 
-            <Chip
-              mode="flat"
-              style={styles.auto_badge}
-              textStyle={{ color: "#FFFFFF", fontSize: 12 }}
-            >
-              Auto
-            </Chip>
+            <View style={styles.auto_badge}>
+              <Text style={styles.badge_text}>{text.autoBadge}</Text>
+            </View>
           </View>
         </TouchableOpacity>
         <TouchableOpacity
@@ -66,9 +103,9 @@ export default function Index() {
             </View>
 
             <View style={styles.card_text_section}>
-              <Text style={styles.card_title}>manual search</Text>
+              <Text style={styles.card_title}>{text.manualTitle}</Text>
               <Divider style={{ marginVertical: 3 }} />
-              <Text style={styles.card_subtitle}>Search by region/city</Text>
+              <Text style={styles.card_subtitle}>{text.manualSubtitle}</Text>
             </View>
           </View>
         </TouchableOpacity>
@@ -159,11 +196,15 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 0,
     top: 8,
-    height: 24,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderTopLeftRadius: 12,
-    borderTopRightRadius: 0,
-    borderBottomRightRadius: 0,
     borderBottomLeftRadius: 12,
+  },
+  badge_text: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "600",
   },
   tag_container: {
     borderRadius: 100,

@@ -1,3 +1,5 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import { Button } from "react-native-paper";
@@ -5,6 +7,17 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function LanguageSelectionPage() {
   const [selected, setSelected] = useState<string | null>(null);
+  const router = useRouter();
+
+  const saveLanguage = async (language: string) => {
+    try {
+      await AsyncStorage.setItem("selectedLanguage", language);
+      setSelected(language);
+      router.replace("/(tabs)");
+    } catch (error) {
+      console.error("Error saving language:", error);
+    }
+  };
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.image_container}>
@@ -24,27 +37,29 @@ export default function LanguageSelectionPage() {
       <View style={styles.button_container}>
         <Button
           mode="contained"
-          onPress={() => setSelected("ar")}
+          onPress={() => saveLanguage("ar")}
           style={styles.language_button}
-          buttonColor={selected === "ar" ? "#FFFFFF" : "#09C849"}
+          buttonColor={selected === "ar" ? "#09C849" : "#FFFFFF"}
           textColor={selected === "ar" ? "#FFFFFF" : "#1E7FC1"}
         >
           🇲🇦 العربية
         </Button>
+
         <Button
           mode="contained"
-          onPress={() => setSelected("en")}
+          onPress={() => saveLanguage("en")}
           style={styles.language_button}
-          buttonColor={selected === "en" ? "#FFFFFF" : "#09C849"}
+          buttonColor={selected === "en" ? "#09C849" : "#FFFFFF"}
           textColor={selected === "en" ? "#FFFFFF" : "#1E7FC1"}
         >
           🇬🇧 English
         </Button>
+
         <Button
           mode="contained"
-          onPress={() => setSelected("fr")}
+          onPress={() => saveLanguage("fr")}
           style={styles.language_button}
-          buttonColor={selected === "fr" ? "#FFFFFF" : "#09C849"}
+          buttonColor={selected === "fr" ? "#09C849" : "#FFFFFF"}
           textColor={selected === "fr" ? "#FFFFFF" : "#1E7FC1"}
         >
           🇫🇷 French

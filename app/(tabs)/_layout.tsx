@@ -34,6 +34,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => (
             <Ionicons name="menu" size={24} color={color} />
           ),
+          headerShown: false,
         }}
       />
     </Tabs>
