@@ -1,8 +1,9 @@
 import Divider from "@/components/divider_line";
 import { regions } from "@/data/regions";
 import { getLanguage } from "@/utils/getLanguage";
+import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { FlatList, Image, StyleSheet, Text, View } from "react-native";
 import { Button, Searchbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -11,9 +12,11 @@ export default function SearchIndex() {
   const [searchRegion, setSearchRegion] = useState("");
   const [language, setLanguage] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadLanguage();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadLanguage();
+    }, []),
+  );
 
   const loadLanguage = async () => {
     const lang = await getLanguage();
