@@ -1,11 +1,13 @@
+import { citiesByRegion } from "./cities";
+
 export const regions = [
   {
     id: "1",
     name: "Région Tanger-Tetouan-Al Hoceima",
     nameAr: "جهة طنجة - تطوان - الحسيمة",
     nameEn: "Tanger-Tetouan-Al Hoceima Region",
-    cities: "Tanger - Tétouan - Al Hoceima...etc",
-    citiesAr: "عمالة طنجة - أصيلة - عمالة المضيق - الفنيدق...الخ",
+    cities: citiesByRegion["1"].map((c) => c.name).join(" - "),
+    citiesAr: citiesByRegion["1"].map((c) => c.nameAr).join(" - "),
     image: require("@/assets/images/regions/Tanger-Tetouan-Al Hoceima.webp"),
   },
   {
@@ -13,8 +15,8 @@ export const regions = [
     name: "Région Oriental",
     nameAr: "جهة الشرق",
     nameEn: "Oriental Region",
-    cities: "Oujda - Nador - Berkane...etc",
-    citiesAr: "عمالة وجدة - أنجاد - عمالة الناظور - بركان...الخ",
+    cities: citiesByRegion["2"].map((c) => c.name).join(" - "),
+    citiesAr: citiesByRegion["2"].map((c) => c.nameAr).join(" - "),
     image: require("@/assets/images/regions//Oriental.webp"),
   },
   {
@@ -22,8 +24,8 @@ export const regions = [
     name: "Région Fès-Meknès",
     nameAr: "جهة فاس - مكناس",
     nameEn: "Fès-Meknès Region",
-    cities: "Fès - Meknès - Ifrane...etc",
-    citiesAr: "عمالة فاس - عمالة مكناس - إقليم إفران...الخ",
+    cities: citiesByRegion["3"].map((c) => c.name).join(" - "),
+    citiesAr: citiesByRegion["3"].map((c) => c.nameAr).join(" - "),
     image: require("@/assets/images/regions//Fès-Meknès.webp"),
   },
   {
@@ -31,8 +33,8 @@ export const regions = [
     name: "Région Rabat-Salé-Kénitra",
     nameAr: "جهة الرباط - سلا - القنيطرة",
     nameEn: "Rabat-Salé-Kénitra Region",
-    cities: "Rabat - Salé - Kénitra...etc",
-    citiesAr: "عمالة الرباط - عمالة سلا - عمالة القنيطرة...الخ",
+    cities: citiesByRegion["4"].map((c) => c.name).join(" - "),
+    citiesAr: citiesByRegion["4"].map((c) => c.nameAr).join(" - "),
     image: require("@/assets/images/regions//Rabat-Salé-Kénitra.webp"),
   },
   {
@@ -40,8 +42,8 @@ export const regions = [
     name: "Région Béni Mellal-Khénifra",
     nameAr: "جهة بني ملال - خنيفرة",
     nameEn: "Béni Mellal-Khénifra Region",
-    cities: "Béni Mellal - Khénifra - Khouribga...etc",
-    citiesAr: "عمالة بني ملال - إقليم خنيفرة - إقليم خريبكة...الخ",
+    cities: citiesByRegion["5"].map((c) => c.name).join(" - "),
+    citiesAr: citiesByRegion["5"].map((c) => c.nameAr).join(" - "),
     image: require("@/assets/images/regions//Béni Mellal-Khénifra.webp"),
   },
   {
@@ -49,8 +51,8 @@ export const regions = [
     name: "Région Casablanca-Settat",
     nameAr: "جهة الدار البيضاء - سطات",
     nameEn: "Casablanca-Settat Region",
-    cities: "Casablanca - Mohammedia - Settat...etc",
-    citiesAr: "عمالة الدار البيضاء - عمالة المحمدية - عمالة سطات...الخ",
+    cities: citiesByRegion["6"].map((c) => c.name).join(" - "),
+    citiesAr: citiesByRegion["6"].map((c) => c.nameAr).join(" - "),
     image: require("@/assets/images/regions//Casablanca-Settat.png"),
   },
   {
@@ -58,8 +60,8 @@ export const regions = [
     name: "Région Marrakech-Safi",
     nameAr: "جهة مراكش - آسفي",
     nameEn: "Marrakech-Safi Region",
-    cities: "Marrakech - Safi - Essaouira...etc",
-    citiesAr: "عمالة مراكش - عمالة آسفي - عمالة الصويرة...الخ",
+    cities: citiesByRegion["7"].map((c) => c.name).join(" - "),
+    citiesAr: citiesByRegion["7"].map((c) => c.nameAr).join(" - "),
     image: require("@/assets/images/regions//Marrakech-Safi.webp"),
   },
   {
@@ -67,8 +69,8 @@ export const regions = [
     name: "Région Drâa-Tafilalet",
     nameAr: "جهة درعة - تافيلالت",
     nameEn: "Drâa-Tafilalet Region",
-    cities: "Errachidia - Ouarzazate - Zagora...etc",
-    citiesAr: "عمالة الرشيدية - عمالة ورزازات - إقليم زاكورة...الخ",
+    cities: citiesByRegion["8"].map((c) => c.name).join(" - "),
+    citiesAr: citiesByRegion["8"].map((c) => c.nameAr).join(" - "),
     image: require("@/assets/images/regions//Drâa-Tafilalet.webp"),
   },
   {
@@ -76,8 +78,8 @@ export const regions = [
     name: "Région Souss-Massa",
     nameAr: "جهة سوس - ماسة",
     nameEn: "Souss-Massa Region",
-    cities: "Agadir - Taroudant - Tiznit...etc",
-    citiesAr: "عمالة أكادير - إداوتنان - إقليم تارودانت - إقليم تزنيت...الخ",
+    cities: citiesByRegion["9"].map((c) => c.name).join(" - "),
+    citiesAr: citiesByRegion["9"].map((c) => c.nameAr).join(" - "),
     image: require("@/assets/images/regions//Souss-Massa.jpg"),
   },
   {
@@ -85,8 +87,8 @@ export const regions = [
     name: "Région Guelmim-Oued Noun",
     nameAr: "جهة كلميم - واد نون",
     nameEn: "Guelmim-Oued Noun Region",
-    cities: "Guelmim - Tan-Tan - Sidi Ifni...etc",
-    citiesAr: "عمالة كلميم - إقليم طانطان - إقليم سيدي إفني...الخ",
+    cities: citiesByRegion["10"].map((c) => c.name).join(" - "),
+    citiesAr: citiesByRegion["10"].map((c) => c.nameAr).join(" - "),
     image: require("@/assets/images/regions//Guelmim-Oued Noun.jpg"),
   },
   {
@@ -94,8 +96,8 @@ export const regions = [
     name: "Région Laâyoune-Sakia El Hamra",
     nameAr: "جهة العيون - الساقية الحمراء",
     nameEn: "Laâyoune-Sakia El Hamra Region",
-    cities: "Laâyoune - Boujdour - Tarfaya...etc",
-    citiesAr: "عمالة العيون - إقليم بوجدور - إقليم طرفاية...الخ",
+    cities: citiesByRegion["11"].map((c) => c.name).join(" - "),
+    citiesAr: citiesByRegion["11"].map((c) => c.nameAr).join(" - "),
     image: require("@/assets/images/regions//Laâyoune-Sakia El Hamra.webp"),
   },
   {
@@ -103,8 +105,8 @@ export const regions = [
     name: "Région Dakhla-Oued Ed-Dahab",
     nameAr: "جهة الداخلة - وادي الذهب",
     nameEn: "Dakhla-Oued Ed-Dahab Region",
-    cities: "Dakhla - Aousserd...etc",
-    citiesAr: "عمالة الداخلة - إقليم أوسرد...الخ",
+    cities: citiesByRegion["12"].map((c) => c.name).join(" - "),
+    citiesAr: citiesByRegion["12"].map((c) => c.nameAr).join(" - "),
     image: require("@/assets/images/regions//Dakhla-Oued Ed-Dahab.webp"),
   },
 ];

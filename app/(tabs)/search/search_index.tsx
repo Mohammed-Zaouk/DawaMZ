@@ -11,6 +11,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function SearchIndex() {
   const [searchRegion, setSearchRegion] = useState("");
   const [language, setLanguage] = useState<string | null>(null);
+  const filterData = regions.filter(
+    (region) =>
+      region.name
+        .toLocaleLowerCase()
+        .includes(searchRegion.toLocaleLowerCase()) ||
+      region.nameAr.includes(searchRegion) ||
+      region.cities.toLowerCase().includes(searchRegion.toLowerCase()) ||
+      region.citiesAr.includes(searchRegion),
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -23,17 +32,35 @@ export default function SearchIndex() {
     setLanguage(lang);
   };
 
+  const getText = () => {
+    if (language === "ar")
+      return { button: "عرض المدن", search: "ابحث عن منطقة أو مدينة..." };
+    if (language === "fr")
+      return {
+        button: "Voir les villes",
+        search: "Rechercher une région ou ville...",
+      };
+    return { button: "View Cities", search: "Search regions or cities..." };
+  };
+
+  const text = getText();
+
   return (
     <SafeAreaView style={styles.screen_container}>
       <Searchbar
-        placeholder="Search"
+        placeholder={text.search}
         onChangeText={setSearchRegion}
         value={searchRegion}
         style={styles.search_bar}
-        iconColor="#666"
+        keyboardType="default"
+        textContentType="none"
+        autoCorrect={false}
+        iconColor="#2196F3"
+        placeholderTextColor="#a0b4c8"
+        inputStyle={{ color: "#1a3a6e", fontSize: 16, paddingBottom: 9 }}
       />
       <FlatList
-        data={regions}
+        data={filterData}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <CardItem
@@ -45,9 +72,11 @@ export default function SearchIndex() {
             cities={item.cities}
             citiesAr={item.citiesAr}
             language={language}
+            text={text}
           />
         )}
         contentContainerStyle={styles.list_container}
+        showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
   );
@@ -62,6 +91,7 @@ function CardItem({
   cities,
   citiesAr,
   language,
+  text,
 }: {
   id: string;
   name: string;
@@ -71,14 +101,9 @@ function CardItem({
   cities: string;
   citiesAr: string;
   language: string | null;
+  text: any;
 }) {
   const router = useRouter();
-
-  const getButtonText = () => {
-    if (language === "ar") return "عرض المدن";
-    if (language === "fr") return "Voir les villes";
-    return "View Cities";
-  };
 
   return (
     <View style={styles.card}>
@@ -104,8 +129,10 @@ function CardItem({
               })
             }
             style={styles.card_button}
+            labelStyle={styles.card_button_label}
+            contentStyle={styles.card_button_content}
           >
-            {getButtonText()}
+            {text.button}
           </Button>
         </View>
       </View>
@@ -121,27 +148,33 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#2196F3",
     gap: 20,
-    paddingLeft: 10,
-    paddingRight: 10,
-    paddingTop: 20,
+    paddingHorizontal: 10,
+    paddingTop: 15,
   },
   search_bar: {
     backgroundColor: "#FFFFFF",
     elevation: 0,
     shadowOpacity: 0,
+    borderRadius: 30,
+    borderWidth: 1.5,
+    borderColor: "rgba(33, 150, 243, 0.2)",
   },
   list_container: {
     gap: 15,
   },
   card: {
     flexDirection: "row",
-    borderColor: "#FFFFFF",
-    borderStyle: "solid",
     justifyContent: "flex-end",
-    borderWidth: 1,
     backgroundColor: "#FFFFFF",
     borderRadius: 20,
     overflow: "hidden",
+    elevation: 6,
+    shadowColor: "#0a50b8",
+    shadowOpacity: 0.13,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 5 },
+    borderWidth: 1,
+    borderColor: "rgba(33, 150, 243, 0.1)",
   },
   image_container: {
     position: "relative",
@@ -178,9 +211,22 @@ const styles = StyleSheet.create({
   },
   button_container: {
     marginTop: 8,
+    shadowColor: "#1a6fd4",
+    shadowOpacity: 0.28,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
   },
   card_button: {
-    borderRadius: 20,
+    borderRadius: 24,
     backgroundColor: "#3385FF",
+  },
+  card_button_label: {
+    fontWeight: "700",
+    letterSpacing: 0.2,
+    color: "#ffffff",
+  },
+  card_button_content: {
+    paddingVertical: 2,
   },
 });

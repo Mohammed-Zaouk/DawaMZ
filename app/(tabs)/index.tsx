@@ -1,9 +1,17 @@
 import { getLanguage } from "@/utils/getLanguage";
+import { getUserLocation } from "@/utils/location/getLocation";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Divider from "../../components/divider_line";
 
@@ -17,6 +25,24 @@ export default function Index() {
   const loadLanguage = async () => {
     const lang = await getLanguage();
     setLanguage(lang);
+  };
+  const mapRedirect = async () => {
+    const loc = await getUserLocation();
+    if (loc) {
+      router.push({
+        pathname: "/(tabs)/search/maps/auto-map",
+        params: {
+          latitude: loc.latitude,
+          longitude: loc.longitude,
+        },
+      });
+    } else {
+      Alert.alert(
+        "Location Required",
+        "Please enable location permissions to use auto search.",
+        [{ text: "OK" }],
+      );
+    }
   };
 
   const getText = () => {
@@ -70,7 +96,7 @@ export default function Index() {
         <Text style={styles.page_subtitle}>{text.subtitle}</Text>
       </View>
       <View style={styles.search_cards_container}>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={mapRedirect}>
           <View style={styles.search_card}>
             <View style={styles.tag_container}>
               <Ionicons
