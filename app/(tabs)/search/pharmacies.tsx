@@ -253,7 +253,7 @@ function CardItem({
   const mapRedirect = async () => {
     const loc = await getUserLocation();
     if (loc) {
-      router.push({ pathname: "/(tabs)/search/maps/pharmacy-direction" });
+      router.push({ pathname: "/maps/pharmacy-direction" });
     } else {
       Alert.alert(
         "Location Required",
@@ -331,7 +331,7 @@ function CardItem({
           <TouchableOpacity
             onPress={() =>
               router.push({
-                pathname: "/(tabs)/search/maps/pharmacy-location",
+                pathname: "/maps/pharmacy-location",
                 params: {
                   pharmacyId: id,
                   cityId: cityId,
@@ -377,7 +377,6 @@ const styles = StyleSheet.create({
   filterButton: {
     borderRadius: 50,
     borderWidth: 1.5,
-    borderColor: "#1A73E8",
   },
   filterButtonActive: {
     borderColor: "#1A73E8",

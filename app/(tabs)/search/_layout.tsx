@@ -6,7 +6,6 @@ export default function SearchLayout() {
       <Stack.Screen name="search_index" options={{ title: "Select Region" }} />
       <Stack.Screen name="cities" options={{ title: "Select City" }} />
       <Stack.Screen name="pharmacies" options={{ title: "Pharmacies" }} />
-      <Stack.Screen name="maps" />
     </Stack>
   );
 }

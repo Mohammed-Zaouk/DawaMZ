@@ -25,6 +25,7 @@ export default function RootLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="onboarding/language_selection" />
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="maps" />
     </Stack>
   );
 }

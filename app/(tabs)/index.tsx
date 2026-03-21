@@ -30,7 +30,7 @@ export default function Index() {
     const loc = await getUserLocation();
     if (loc) {
       router.push({
-        pathname: "/(tabs)/search/maps/auto-map",
+        pathname: "/maps/auto-map",
         params: {
           latitude: loc.latitude,
           longitude: loc.longitude,
