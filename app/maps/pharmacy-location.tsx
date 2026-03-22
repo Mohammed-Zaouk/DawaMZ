@@ -51,6 +51,7 @@ export default function PharmacyMap() {
         call: "اتصال",
         copy: "نسخ",
         locationWarning: "فعّل الموقع لعرض المسافة والاتجاهات",
+        copied: "تم نسخ العنوان",
       };
     } else if (language === "fr") {
       return {
@@ -60,6 +61,7 @@ export default function PharmacyMap() {
         call: "Appeler",
         copy: "Copier",
         locationWarning: "Activez la localisation pour voir la distance",
+        copied: "Adresse copiée",
       };
     } else {
       return {
@@ -69,6 +71,7 @@ export default function PharmacyMap() {
         call: "Call",
         copy: "Copy",
         locationWarning: "Enable location to see distance & directions",
+        copied: "Address copied to clipboard",
       };
     }
   };
@@ -119,8 +122,8 @@ export default function PharmacyMap() {
         initialRegion={{
           latitude: Number(pharmacy?.latitude),
           longitude: Number(pharmacy?.longitude),
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
+          latitudeDelta: 0.005,
+          longitudeDelta: 0.005,
         }}
         mapType="hybrid"
         zoomEnabled={true}
@@ -200,7 +203,7 @@ export default function PharmacyMap() {
         duration={2000}
         style={styles.snackbar}
       >
-        Address copied to clipboard
+        {text.copied}
       </Snackbar>
     </SafeAreaView>
   );
@@ -331,7 +334,7 @@ const styles = StyleSheet.create({
   snackbar: {
     borderRadius: 12,
     marginHorizontal: 16,
-    marginBottom: 12,
+    marginBottom: 100,
     backgroundColor: "#1C1C1E",
   },
 });
