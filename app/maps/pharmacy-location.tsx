@@ -18,35 +18,28 @@ import { Button, Snackbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function PharmacyMap() {
-  const { pharmacyId, cityId } = useLocalSearchParams();
-  const pharmacies = pharmaciesByCity[cityId as string];
-  const pharmacy = pharmacies.find((p) => p.id === pharmacyId);
   const [language, setLanguage] = useState<string | null>();
   const [check, setCheck] = useState<boolean>(true);
   const [snackbarVisible, setSnackbarVisible] = useState<boolean>(false);
+  const { pharmacyId, cityId } = useLocalSearchParams();
   const router = useRouter();
+
+  const pharmacies = pharmaciesByCity[cityId as string];
+  const pharmacy = pharmacies.find((p) => p.id === pharmacyId);
 
   useEffect(() => {
     loadLanguage();
     loadCheck();
   }, []);
 
-  const loadCheck = async () => {
-    const ch = await checkLocationPermission();
-    setCheck(ch);
-  };
-
-  const handleCall = () => {
-    Linking.openURL(`tel:${pharmacy?.phone}`);
-  };
-
-  const handleCopy = async () => {
-    await Clipboard.setStringAsync(text.description as string);
-  };
-
   const loadLanguage = async () => {
     const lang = await getLanguage();
     setLanguage(lang);
+  };
+
+  const loadCheck = async () => {
+    const ch = await checkLocationPermission();
+    setCheck(ch);
   };
 
   const getText = () => {
@@ -82,23 +75,45 @@ export default function PharmacyMap() {
 
   const text = getText();
 
+  const handleCall = () => {
+    Linking.openURL(`tel:${pharmacy?.phone}`);
+  };
+
+  const handleCopy = async () => {
+    await Clipboard.setStringAsync(text.description as string);
+    setSnackbarVisible(true);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
-          style={styles.backButton}
+          style={styles.back_button}
         >
-          <Ionicons name="chevron-back" size={20} color="#000" />
+          <Ionicons name="chevron-back" size={18} color="#1C1C1E" />
         </TouchableOpacity>
         <View style={styles.header_info}>
-          <Text style={styles.header_title}>{text.title}</Text>
-          <Text style={styles.header_subtitle}>{text.description}</Text>
+          <Text
+            style={styles.header_title}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {text.title}
+          </Text>
+          <Text
+            style={styles.header_subtitle}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {text.description}
+          </Text>
         </View>
         <View style={styles.header_badge}>
           <PulseDot color={pharmacy?.open ? "#22c55e" : "#ef4444"} />
         </View>
       </View>
+
       <MapView
         style={styles.map}
         initialRegion={{
@@ -127,12 +142,14 @@ export default function PharmacyMap() {
           pinColor={pharmacy?.open ? "#09C849" : "#EF4444"}
         />
       </MapView>
+
       <View style={styles.footer}>
+        <View style={styles.handle} />
         <View style={styles.action_bar}>
           <Button
             mode="contained"
             icon={() => (
-              <Ionicons name="location-outline" size={14} color="#fff" />
+              <Ionicons name="navigate-outline" size={14} color="#fff" />
             )}
             buttonColor="#1A73E8"
             textColor="#fff"
@@ -148,7 +165,7 @@ export default function PharmacyMap() {
             )}
             textColor="#1A73E8"
             style={styles.action_button_secondary}
-            labelStyle={styles.action_button_label}
+            labelStyle={styles.action_button_secondary_label}
             onPress={handleCall}
           >
             {text.call}
@@ -160,122 +177,161 @@ export default function PharmacyMap() {
             )}
             textColor="#1A73E8"
             style={styles.action_button_secondary}
-            labelStyle={styles.action_button_label}
+            labelStyle={styles.action_button_secondary_label}
             onPress={handleCopy}
           >
             {text.copy}
           </Button>
-          <Snackbar
-            visible={snackbarVisible}
-            onDismiss={() => setSnackbarVisible(false)}
-            duration={2000}
-          >
-            Phone number copied!
-          </Snackbar>
         </View>
+
         {!check && (
           <View style={styles.location_warning}>
-            <Ionicons name="alert-circle-outline" size={14} color="#B45309" />
+            <Ionicons name="alert-circle-outline" size={13} color="#B45309" />
             <Text style={styles.location_warning_text}>
               {text.locationWarning}
             </Text>
           </View>
         )}
       </View>
+
+      <Snackbar
+        visible={snackbarVisible}
+        onDismiss={() => setSnackbarVisible(false)}
+        duration={2000}
+        style={styles.snackbar}
+      >
+        Address copied to clipboard
+      </Snackbar>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  // Container
   container: {
     flex: 1,
     marginBottom: -25,
     backgroundColor: "#FFFFFF",
   },
+  // Header
   header: {
-    height: 60,
+    height: 62,
     backgroundColor: "#FFFFFF",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 12,
   },
-  backButton: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: "#F0F0F0",
+  back_button: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#F2F2F7",
     alignItems: "center",
     justifyContent: "center",
   },
   header_info: {
     flex: 1,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
   },
   header_title: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#1a3a6e",
+    color: "#1C1C1E",
+    letterSpacing: -0.2,
   },
   header_subtitle: {
     fontSize: 12,
-    color: "#7a92aa",
-    marginTop: 1,
+    color: "#8E8E93",
+    marginTop: 2,
+    letterSpacing: 0.1,
   },
   header_badge: {
-    width: 34,
-    height: 34,
+    width: 36,
+    height: 36,
     alignItems: "center",
     justifyContent: "center",
   },
+  // Map
   map: {
     flex: 1,
   },
+  // Footer
   footer: {
     backgroundColor: "#FFFFFF",
-    elevation: 8,
-    shadowColor: "#000",
-    borderRadius: 20,
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: -2 },
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 8,
     paddingBottom: 25,
+    paddingHorizontal: 14,
+    shadowColor: "#000",
+    shadowOpacity: 0.07,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: -4 },
+    elevation: 10,
+  },
+  handle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#E0E0E5",
+    alignSelf: "center",
+    marginBottom: 14,
   },
   action_bar: {
     flexDirection: "row",
     gap: 8,
-    padding: 12,
-    paddingBottom: 8,
+    marginBottom: 10,
   },
   action_button_primary: {
     borderRadius: 50,
-    flex: 1,
-  },
-  action_button_secondary: {
-    borderRadius: 50,
-    flex: 1,
-    borderColor: "#D0D0D0",
+    flex: 2,
   },
   action_button_label: {
     fontSize: 12,
     fontWeight: "600",
+    letterSpacing: 0.1,
+  },
+  action_button_secondary: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+    height: 40,
+    borderRadius: 50,
+    backgroundColor: "#EEF4FD",
+    borderWidth: 1,
+    borderColor: "#D6E4FA",
+  },
+  action_button_secondary_label: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#1A73E8",
+    letterSpacing: 0.1,
   },
   location_warning: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    marginHorizontal: 12,
-    marginBottom: 4,
-    backgroundColor: "#FEF3C7",
-    borderRadius: 8,
+    backgroundColor: "#FFFBEB",
+    borderRadius: 10,
     paddingVertical: 8,
     paddingHorizontal: 10,
-    borderWidth: 0.5,
-    borderColor: "#FCD34D",
+    borderWidth: 1,
+    borderColor: "#FDE68A",
   },
   location_warning_text: {
     fontSize: 12,
-    color: "#B45309",
+    color: "#92400E",
     flex: 1,
+    lineHeight: 17,
+  },
+  // Snackbar
+  snackbar: {
+    borderRadius: 12,
+    marginHorizontal: 16,
+    marginBottom: 12,
+    backgroundColor: "#1C1C1E",
   },
 });

@@ -19,8 +19,7 @@ export const findNearestOpenPharmacy = (userLat: number, userLon: number) => {
 
   const nearbyOpen = pharmaciesWithDistance
     .filter((p) => p.open)
-    .sort((a, b) => a.distance - b.distance)
-    .slice(0, 20);
+    .sort((a, b) => a.distance - b.distance);
 
-  return nearbyOpen;
+  return nearbyOpen[0];
 };

@@ -126,15 +126,22 @@ function CardItem({
         >
           <View style={styles.subtitle_chip}>
             <Ionicons name="medkit-outline" size={13} color="#7a92aa" />
-            <Text style={styles.card_subtitle}>
+            <Text
+              style={styles.card_subtitle}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {text.total(allPharmacies)}
             </Text>
           </View>
           <View style={styles.subtitle_dot} />
-
           <View style={styles.subtitle_chip}>
             <PulseDot color={"#22c55e"} />
-            <Text style={[styles.card_subtitle, styles.open_text]}>
+            <Text
+              style={[styles.card_subtitle, styles.open_text]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {text.open(openPharmacies)}
             </Text>
           </View>
@@ -156,6 +163,7 @@ function CardItem({
           </Button>
         </View>
       </View>
+
       <View style={styles.image_container}>
         <Image source={image} style={styles.card_image} resizeMode="cover" />
       </View>
@@ -196,20 +204,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     borderWidth: 1,
     borderColor: "rgba(33, 150, 243, 0.1)",
-  },
-  image_container: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    overflow: "hidden",
-    marginLeft: 12,
-    borderWidth: 2.5,
-    borderColor: "#d6eaff",
-    backgroundColor: "#eef5ff",
-  },
-  card_image: {
-    width: "100%",
-    height: "100%",
   },
   card_content: {
     flex: 1,
@@ -268,5 +262,19 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     letterSpacing: 0.3,
     color: "#ffffff",
+  },
+  image_container: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    overflow: "hidden",
+    marginLeft: 12,
+    borderWidth: 2.5,
+    borderColor: "#d6eaff",
+    backgroundColor: "#eef5ff",
+  },
+  card_image: {
+    width: "100%",
+    height: "100%",
   },
 });

@@ -25,11 +25,21 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function PharmaciesPage() {
   const [searchParmacy, setSearchParmacy] = useState("");
   const [language, setLanguage] = useState<string | null>(null);
-  const { cityId } = useLocalSearchParams();
   const [activeFilter, setActiveFilter] = useState("all");
+  const { cityId } = useLocalSearchParams();
   const pharmacies = pharmaciesByCity[cityId as string] || [];
   const [pharmaciesWithDistance, setPharmaciesWithDistance] =
     useState<((typeof pharmacies)[0] & { distance?: number })[]>(pharmacies);
+
+  useEffect(() => {
+    loadLanguage();
+    calcDistance();
+  }, []);
+
+  const loadLanguage = async () => {
+    const lang = await getLanguage();
+    setLanguage(lang);
+  };
 
   const calcDistance = async () => {
     const loc = await getUserLocation();
@@ -47,28 +57,6 @@ export default function PharmaciesPage() {
         .sort((a, b) => a.distance - b.distance);
       setPharmaciesWithDistance(updated);
     }
-  };
-
-  const filteredPharmacies = pharmaciesWithDistance.filter((pharmacy) => {
-    if (activeFilter === "all") return true;
-    else if (activeFilter === "night") return pharmacy.isNightPharmacy === true;
-    else return pharmacy.isOnCall === true;
-  });
-
-  const filterData = filteredPharmacies.filter(
-    (pharmacy) =>
-      pharmacy.name.toLowerCase().includes(searchParmacy.toLowerCase()) ||
-      pharmacy.nameAr.includes(searchParmacy),
-  );
-
-  useEffect(() => {
-    loadLanguage();
-    calcDistance();
-  }, []);
-
-  const loadLanguage = async () => {
-    const lang = await getLanguage();
-    setLanguage(lang);
   };
 
   const getText = () => {
@@ -116,6 +104,19 @@ export default function PharmaciesPage() {
   };
 
   const text = getText();
+
+  const filteredPharmacies = pharmaciesWithDistance.filter((pharmacy) => {
+    if (activeFilter === "all") return true;
+    else if (activeFilter === "night") return pharmacy.isNightPharmacy === true;
+    else return pharmacy.isOnCall === true;
+  });
+
+  const filterData = filteredPharmacies.filter(
+    (pharmacy) =>
+      pharmacy.name.toLowerCase().includes(searchParmacy.toLowerCase()) ||
+      pharmacy.nameAr.includes(searchParmacy),
+  );
+
   return (
     <SafeAreaView style={styles.screen_container}>
       <Searchbar
@@ -127,18 +128,18 @@ export default function PharmaciesPage() {
         placeholderTextColor="#a0b4c8"
         inputStyle={{ color: "#1a3a6e", fontSize: 16, paddingBottom: 9 }}
       />
-      <View style={styles.filterBarWrapper}>
+      <View style={styles.filter_bar_wrapper}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterBar}
+          contentContainerStyle={styles.filter_bar}
         >
           <Button
             mode="contained"
             onPress={() => setActiveFilter("all")}
             style={[
-              styles.filterButton,
-              activeFilter === "all" && styles.filterButtonActive,
+              styles.filter_button,
+              activeFilter === "all" && styles.filter_button_active,
             ]}
             textColor={activeFilter === "all" ? "#FFFFFF" : "#1A73E8"}
             buttonColor={activeFilter === "all" ? "#1A73E8" : "#FFFFFF"}
@@ -156,8 +157,8 @@ export default function PharmaciesPage() {
             mode="contained"
             onPress={() => setActiveFilter("night")}
             style={[
-              styles.filterButton,
-              activeFilter === "night" && styles.filterButtonActive,
+              styles.filter_button,
+              activeFilter === "night" && styles.filter_button_active,
             ]}
             textColor={activeFilter === "night" ? "#FFFFFF" : "#1A73E8"}
             buttonColor={activeFilter === "night" ? "#1A73E8" : "#FFFFFF"}
@@ -175,8 +176,8 @@ export default function PharmaciesPage() {
             mode="contained"
             onPress={() => setActiveFilter("oncall")}
             style={[
-              styles.filterButton,
-              activeFilter === "oncall" && styles.filterButtonActive,
+              styles.filter_button,
+              activeFilter === "oncall" && styles.filter_button_active,
             ]}
             textColor={activeFilter === "oncall" ? "#FFFFFF" : "#1A73E8"}
             buttonColor={activeFilter === "oncall" ? "#1A73E8" : "#FFFFFF"}
@@ -286,7 +287,11 @@ function CardItem({
 
         <View style={styles.info_container}>
           <View style={styles.info_row}>
-            <Text style={styles.info_text}>
+            <Text
+              style={styles.info_text}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {language === "ar" ? addressAr : address}
             </Text>
             <View style={styles.info_icon_wrap}>
@@ -294,7 +299,13 @@ function CardItem({
             </View>
           </View>
           <View style={styles.info_row}>
-            <Text style={styles.info_text}>{phone}</Text>
+            <Text
+              style={styles.info_text}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {phone}
+            </Text>
             <View style={styles.info_icon_wrap}>
               <Ionicons name="call-outline" size={13} color="#3385FF" />
             </View>
@@ -303,7 +314,11 @@ function CardItem({
           <Divider style={styles.divider} />
 
           <View style={styles.info_row}>
-            <Text style={styles.info_text}>
+            <Text
+              style={styles.info_text}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {distance !== undefined
                 ? formatDistance(distance)
                 : text.locationPermission}
@@ -313,7 +328,11 @@ function CardItem({
             </View>
           </View>
           <View style={styles.info_row}>
-            <Text style={styles.info_text}>
+            <Text
+              style={styles.info_text}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {dutyStart} -- {dutyEnd}
             </Text>
             <View style={styles.info_icon_wrap}>
@@ -366,19 +385,20 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: "rgba(33, 150, 243, 0.2)",
   },
-  filterBarWrapper: {
+  // Filter
+  filter_bar_wrapper: {
     height: 50,
   },
-  filterBar: {
+  filter_bar: {
     flexDirection: "row",
     gap: 8,
     alignItems: "center",
   },
-  filterButton: {
+  filter_button: {
     borderRadius: 50,
     borderWidth: 1.5,
   },
-  filterButtonActive: {
+  filter_button_active: {
     borderColor: "#1A73E8",
   },
   list_container: {

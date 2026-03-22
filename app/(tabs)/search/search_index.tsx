@@ -11,15 +11,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function SearchIndex() {
   const [searchRegion, setSearchRegion] = useState("");
   const [language, setLanguage] = useState<string | null>(null);
-  const filterData = regions.filter(
-    (region) =>
-      region.name
-        .toLocaleLowerCase()
-        .includes(searchRegion.toLocaleLowerCase()) ||
-      region.nameAr.includes(searchRegion) ||
-      region.cities.toLowerCase().includes(searchRegion.toLowerCase()) ||
-      region.citiesAr.includes(searchRegion),
-  );
 
   useFocusEffect(
     useCallback(() => {
@@ -44,6 +35,16 @@ export default function SearchIndex() {
   };
 
   const text = getText();
+
+  const filterData = regions.filter(
+    (region) =>
+      region.name
+        .toLocaleLowerCase()
+        .includes(searchRegion.toLocaleLowerCase()) ||
+      region.nameAr.includes(searchRegion) ||
+      region.cities.toLowerCase().includes(searchRegion.toLowerCase()) ||
+      region.citiesAr.includes(searchRegion),
+  );
 
   return (
     <SafeAreaView style={styles.screen_container}>
@@ -144,6 +145,7 @@ function CardItem({
 }
 
 const styles = StyleSheet.create({
+  // Screen
   screen_container: {
     flex: 1,
     backgroundColor: "#2196F3",
@@ -162,6 +164,7 @@ const styles = StyleSheet.create({
   list_container: {
     gap: 15,
   },
+  // Card
   card: {
     flexDirection: "row",
     justifyContent: "flex-end",
@@ -175,15 +178,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 5 },
     borderWidth: 1,
     borderColor: "rgba(33, 150, 243, 0.1)",
-  },
-  image_container: {
-    position: "relative",
-    maxHeight: 110,
-    maxWidth: 110,
-  },
-  card_image: {
-    height: 110,
-    width: 110,
   },
   card_content: {
     flex: 1,
@@ -228,5 +222,14 @@ const styles = StyleSheet.create({
   },
   card_button_content: {
     paddingVertical: 2,
+  },
+  // Image
+  image_container: {
+    maxHeight: 110,
+    maxWidth: 110,
+  },
+  card_image: {
+    height: 110,
+    width: 110,
   },
 });

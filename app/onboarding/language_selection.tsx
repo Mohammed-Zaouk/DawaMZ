@@ -18,6 +18,7 @@ export default function LanguageSelectionPage() {
       console.error("Error saving language:", error);
     }
   };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.image_container}>
@@ -27,13 +28,11 @@ export default function LanguageSelectionPage() {
         />
         <Text style={styles.title}>DawaMZ</Text>
       </View>
-
       <View>
         <Text style={styles.instruction_text}>Choose Your Language</Text>
         <Text style={styles.instruction_text}>اختر اللغة</Text>
         <Text style={styles.instruction_text}>Choisissez la langue</Text>
       </View>
-
       <View style={styles.button_container}>
         <Button
           mode="contained"
@@ -44,7 +43,6 @@ export default function LanguageSelectionPage() {
         >
           🇲🇦 العربية
         </Button>
-
         <Button
           mode="contained"
           onPress={() => saveLanguage("en")}
@@ -54,7 +52,6 @@ export default function LanguageSelectionPage() {
         >
           🇬🇧 English
         </Button>
-
         <Button
           mode="contained"
           onPress={() => saveLanguage("fr")}
@@ -78,6 +75,7 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 30,
   },
+  // Image & Title
   image_container: {
     alignItems: "center",
     justifyContent: "flex-start",
@@ -98,6 +96,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 4,
     fontFamily: "System",
   },
+  // Instructions
   instruction_text: {
     color: "#FFFFFF",
     textAlign: "center",
@@ -106,6 +105,7 @@ const styles = StyleSheet.create({
     marginVertical: 2,
     fontWeight: "400",
   },
+  // Buttons
   button_container: {
     gap: 10,
     width: "100%",

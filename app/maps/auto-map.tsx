@@ -9,6 +9,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AutoMap() {
   const [language, setLanguage] = useState<string | null>();
+  const { latitude, longitude } = useLocalSearchParams<{
+    latitude: string;
+    longitude: string;
+  }>();
 
   useEffect(() => {
     loadLanguage();
@@ -18,10 +22,6 @@ export default function AutoMap() {
     const lang = await getLanguage();
     setLanguage(lang);
   };
-  const { latitude, longitude } = useLocalSearchParams<{
-    latitude: string;
-    longitude: string;
-  }>();
 
   const nearbypharmacy = findNearestOpenPharmacy(
     Number(latitude),
@@ -31,27 +31,28 @@ export default function AutoMap() {
   const getText = () => {
     if (language === "ar") {
       return {
-        title: nearbypharmacy[0].nameAr,
-        description: nearbypharmacy[0].addressAr,
+        title: nearbypharmacy.nameAr,
+        description: nearbypharmacy.addressAr,
       };
     } else {
       return {
-        title: nearbypharmacy[0].name,
-        description: nearbypharmacy[0].address,
+        title: nearbypharmacy.name,
+        description: nearbypharmacy.address,
       };
     }
   };
 
   const text = getText();
-  const isOpen = nearbypharmacy[0].open;
-  const distance = formatDistance(nearbypharmacy[0].distance);
+  const isOpen = nearbypharmacy.open;
+  const distance = formatDistance(nearbypharmacy.distance);
+
   return (
     <SafeAreaView style={styles.container}>
       <MapView
         style={styles.map}
         initialRegion={{
-          latitude: nearbypharmacy[0].latitude,
-          longitude: nearbypharmacy[0].longitude,
+          latitude: nearbypharmacy.latitude,
+          longitude: nearbypharmacy.longitude,
           latitudeDelta: 0.02,
           longitudeDelta: 0.02,
         }}
@@ -59,8 +60,8 @@ export default function AutoMap() {
       >
         <Marker
           coordinate={{
-            latitude: nearbypharmacy[0].latitude,
-            longitude: nearbypharmacy[0].longitude,
+            latitude: nearbypharmacy.latitude,
+            longitude: nearbypharmacy.longitude,
           }}
           title={text.title}
           description={text.description}
