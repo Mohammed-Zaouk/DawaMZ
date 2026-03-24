@@ -1,3 +1,4 @@
+import BackgroundBubbles from "@/components/background_bubbles";
 import Divider from "@/components/divider_line";
 import { PulseDot } from "@/components/pulse_dot";
 import { pharmaciesByCity } from "@/data/pharmacies";
@@ -119,6 +120,7 @@ export default function PharmaciesPage() {
 
   return (
     <SafeAreaView style={styles.screen_container}>
+      <BackgroundBubbles />
       <Searchbar
         placeholder={text.search}
         onChangeText={setSearchParmacy}
@@ -424,7 +426,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   card_title: {
-    fontSize: 18,
+    fontSize: 17.3,
     fontWeight: "700",
     color: "#274796",
     textAlign: "right",
@@ -440,11 +442,11 @@ const styles = StyleSheet.create({
   },
   badge_open: {
     color: "#22c55e",
-    fontSize: 12,
+    fontSize: 11.5,
   },
   badge_closed: {
     color: "#ef4444",
-    fontSize: 12,
+    fontSize: 11.5,
   },
   divider: {
     marginVertical: 7,

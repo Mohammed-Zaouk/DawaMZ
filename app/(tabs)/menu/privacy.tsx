@@ -1,6 +1,8 @@
+import BackgroundBubbles from "@/components/background_bubbles";
+import Header from "@/components/header";
 import { getLanguage } from "@/utils/getLanguage";
 import { useEffect, useState } from "react";
-import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Privacy() {
@@ -152,16 +154,8 @@ export default function Privacy() {
 
   return (
     <SafeAreaView style={styles.screen_container}>
-      <View style={styles.header}>
-        <Image
-          source={require("@/assets/images/logo/logo.png")}
-          style={styles.logo_image}
-        />
-        <View style={styles.logo_text_container}>
-          <Text style={styles.logo_text_first}>Dawa</Text>
-          <Text style={styles.logo_text_second}>MZ</Text>
-        </View>
-      </View>
+      <BackgroundBubbles />
+      <Header />
 
       <View style={styles.content_container}>
         <ScrollView
@@ -212,33 +206,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#2196F3",
     gap: 50,
-  },
-  header: {
-    flex: 1,
-    maxHeight: 80,
-    backgroundColor: "#BBDEFB",
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "center",
-    paddingVertical: 10,
-  },
-  logo_image: {
-    width: 70,
-    height: 70,
-  },
-  logo_text_container: {
-    flexDirection: "row",
-    marginLeft: -10,
-  },
-  logo_text_first: {
-    fontSize: 24,
-    fontWeight: "800",
-    color: "#333333",
-  },
-  logo_text_second: {
-    fontSize: 24,
-    fontWeight: "800",
-    color: "#2196F3",
   },
   content_container: {
     flex: 1,

@@ -1,3 +1,4 @@
+import BackgroundBubbles from "@/components/background_bubbles";
 import Divider from "@/components/divider_line";
 import { regions } from "@/data/regions";
 import { getLanguage } from "@/utils/getLanguage";
@@ -48,6 +49,7 @@ export default function SearchIndex() {
 
   return (
     <SafeAreaView style={styles.screen_container}>
+      <BackgroundBubbles />
       <Searchbar
         placeholder={text.search}
         onChangeText={setSearchRegion}
@@ -186,7 +188,7 @@ const styles = StyleSheet.create({
     paddingRight: 8,
   },
   card_title: {
-    fontSize: 18,
+    fontSize: 16.4,
     fontWeight: "700",
     color: "#274796",
     textAlign: "right",
@@ -197,7 +199,7 @@ const styles = StyleSheet.create({
     marginVertical: 5,
   },
   card_subtitle: {
-    fontSize: 13,
+    fontSize: 12.6,
     color: "#888888",
     textAlign: "right",
     writingDirection: "rtl",

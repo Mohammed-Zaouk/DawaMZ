@@ -1,3 +1,4 @@
+import BackgroundBubbles from "@/components/background_bubbles";
 import Divider from "@/components/divider_line";
 import { PulseDot } from "@/components/pulse_dot";
 import { citiesByRegion } from "@/data/cities";
@@ -59,6 +60,7 @@ export default function CitiesPage() {
 
   return (
     <SafeAreaView style={styles.screen_container}>
+      <BackgroundBubbles />
       <Searchbar
         placeholder={text.search}
         onChangeText={setSearchCity}
@@ -210,7 +212,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   card_title: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: "800",
     color: "#1a3a6e",
     textAlign: "right",

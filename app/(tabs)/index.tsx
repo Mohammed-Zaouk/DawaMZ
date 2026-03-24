@@ -1,3 +1,4 @@
+import BackgroundBubbles from "@/components/background_bubbles";
 import { getLanguage } from "@/utils/getLanguage";
 import { getUserLocation } from "@/utils/location/getLocation";
 import { Ionicons } from "@expo/vector-icons";
@@ -16,25 +17,26 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Divider from "../../components/divider_line";
 
 export default function Index() {
+  const router = useRouter();
   const [language, setLanguage] = useState<string | null>();
+
   useFocusEffect(
     useCallback(() => {
       loadLanguage();
     }, []),
   );
+
   const loadLanguage = async () => {
     const lang = await getLanguage();
     setLanguage(lang);
   };
+
   const mapRedirect = async () => {
     const loc = await getUserLocation();
     if (loc) {
       router.push({
         pathname: "/maps/auto-map",
-        params: {
-          latitude: loc.latitude,
-          longitude: loc.longitude,
-        },
+        params: { latitude: loc.latitude, longitude: loc.longitude },
       });
     } else {
       Alert.alert(
@@ -80,62 +82,104 @@ export default function Index() {
   };
 
   const text = getText();
-  const router = useRouter();
+
   return (
-    <SafeAreaView style={styles.screen_container}>
+    <SafeAreaView style={styles.container}>
+      <BackgroundBubbles />
+
+      {/* Logo */}
       <View style={styles.logo_section}>
         <Image
           source={require("../../assets/images/logo/logo.png")}
           style={styles.logo_image}
         />
-        <Text style={styles.logo_title}>DawaMZ</Text>
+        <Text style={styles.logo_title} numberOfLines={1} ellipsizeMode="tail">
+          DawaMZ
+        </Text>
       </View>
+
+      {/* Header */}
       <View style={styles.header_section}>
-        <Text style={styles.page_title}>{text.title}</Text>
-        <Divider />
-        <Text style={styles.page_subtitle}>{text.subtitle}</Text>
+        <View style={styles.side_line} />
+        <View style={styles.header_text}>
+          <Text
+            style={styles.page_title}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {text.title}
+          </Text>
+          <Text
+            style={styles.page_subtitle}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {text.subtitle}
+          </Text>
+        </View>
+        <View style={styles.side_line} />
       </View>
-      <View style={styles.search_cards_container}>
-        <TouchableOpacity onPress={mapRedirect}>
-          <View style={styles.search_card}>
-            <View style={styles.tag_container}>
+
+      {/* Search Cards */}
+      <View style={styles.cards_container}>
+        {/* Auto Search */}
+        <TouchableOpacity onPress={mapRedirect} activeOpacity={0.85}>
+          <View style={styles.card}>
+            <View style={styles.icon_container}>
               <Ionicons
-                name="location"
-                size={32}
-                color="#333"
-                style={{ padding: 5 }}
+                name="locate"
+                size={28}
+                color="#2196F3"
+                style={{ padding: 7 }}
               />
             </View>
-
-            <View style={styles.card_text_section}>
-              <Text style={styles.card_title}>{text.autoTitle}</Text>
+            <View style={styles.card_text}>
+              <View style={styles.title_row}>
+                <Text
+                  style={styles.card_title}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {text.autoTitle}
+                </Text>
+                <View style={styles.auto_badge}>
+                  <View style={styles.badge_dot} />
+                  <Text style={styles.badge_text}>{text.autoBadge}</Text>
+                </View>
+              </View>
               <Divider style={{ marginVertical: 3 }} />
-              <Text style={styles.card_subtitle}>{text.autoSubtitle}</Text>
+              <Text
+                style={styles.card_subtitle}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {text.autoSubtitle}
+              </Text>
             </View>
-
-            <View style={styles.auto_badge}>
-              <Text style={styles.badge_text}>{text.autoBadge}</Text>
-            </View>
+            <Ionicons name="chevron-forward" size={18} color="#B0C8E8" />
           </View>
         </TouchableOpacity>
+
+        {/* Manual Search */}
         <TouchableOpacity
           onPress={() => router.push("/(tabs)/search/search_index")}
+          activeOpacity={0.85}
         >
-          <View style={styles.search_card}>
-            <View style={styles.tag_container}>
+          <View style={styles.card}>
+            <View style={styles.icon_container}>
               <Ionicons
-                name="map"
-                size={32}
-                color="#333"
-                style={{ padding: 5 }}
+                name="map-outline"
+                size={26}
+                color="#2196F3"
+                style={{ padding: 7 }}
               />
             </View>
-
-            <View style={styles.card_text_section}>
+            <View style={styles.card_text}>
               <Text style={styles.card_title}>{text.manualTitle}</Text>
               <Divider style={{ marginVertical: 3 }} />
               <Text style={styles.card_subtitle}>{text.manualSubtitle}</Text>
             </View>
+            <Ionicons name="chevron-forward" size={18} color="#B0C8E8" />
           </View>
         </TouchableOpacity>
       </View>
@@ -144,7 +188,8 @@ export default function Index() {
 }
 
 const styles = StyleSheet.create({
-  screen_container: {
+  // Screen
+  container: {
     flex: 1,
     backgroundColor: "#2196F3",
     alignItems: "center",
@@ -152,52 +197,68 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 30,
   },
+
+  // Logo
   logo_section: {
     alignItems: "center",
     justifyContent: "flex-start",
-    marginTop: 60,
+    marginTop: 50,
   },
   logo_image: {
-    width: 214,
-    height: 201,
+    width: 180,
+    height: 170,
     marginBottom: -55,
   },
   logo_title: {
-    fontSize: 50,
+    fontSize: 45,
     fontWeight: "bold",
     color: "#FFFFFF",
     letterSpacing: 2,
     textShadowColor: "rgba(0, 0, 0, 0.3)",
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
-    fontFamily: "System",
   },
+
+  // Header
   header_section: {
-    // Add your styles
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    gap: 12,
+  },
+  side_line: {
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.35)",
+    flex: 1,
+  },
+  header_text: {
+    alignItems: "center",
   },
   page_title: {
-    fontSize: 23,
+    fontSize: 21,
     fontWeight: "semibold",
     color: "#EAF3FF",
     textAlign: "center",
   },
   page_subtitle: {
-    fontSize: 14,
+    fontSize: 13,
     color: "#D9DEE3",
     textAlign: "center",
     opacity: 0.85,
   },
-  search_cards_container: {
+
+  // Cards
+  cards_container: {
     width: "100%",
-    gap: 20,
+    gap: 15,
   },
-  search_card: {
+  card: {
     flexDirection: "row",
     alignItems: "center",
     height: 90,
     paddingHorizontal: 15,
     paddingVertical: 12,
-    borderRadius: 15,
+    borderRadius: 18,
     backgroundColor: "#FFFFFF",
     gap: 12,
     shadowColor: "#000",
@@ -206,37 +267,52 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  card_text_section: {
+  icon_container: {
+    borderRadius: 14,
+    backgroundColor: "#EEF5FF",
+    alignItems: "center",
     justifyContent: "center",
+  },
+  card_text: {
     flex: 1,
+    justifyContent: "center",
+  },
+  title_row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 2,
   },
   card_title: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#1E1E1E",
-    marginBottom: 4,
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#1A3A5C",
   },
   card_subtitle: {
     fontSize: 12,
     color: "#666666",
+    lineHeight: 17,
   },
+
+  // Auto badge
   auto_badge: {
-    backgroundColor: "#4CAF50",
-    position: "absolute",
-    right: 0,
-    top: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderTopLeftRadius: 12,
-    borderBottomLeftRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#E8F5E9",
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 20,
+    gap: 4,
+  },
+  badge_dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#43A047",
   },
   badge_text: {
-    color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  tag_container: {
-    borderRadius: 100,
-    backgroundColor: "#8EBEF4",
+    color: "#43A047",
+    fontSize: 11,
+    fontWeight: "700",
   },
 });
