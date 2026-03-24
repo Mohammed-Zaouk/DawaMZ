@@ -1,11 +1,12 @@
 import { PulseDot } from "@/components/pulse_dot";
 import { pharmaciesByCity } from "@/data/pharmacies";
 import { getLanguage } from "@/utils/getLanguage";
+import { formatDistance } from "@/utils/location/calculateDistance";
 import { checkLocationPermission } from "@/utils/location/getLocation";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Linking,
   StyleSheet,
@@ -13,19 +14,28 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import MapView, { Marker } from "react-native-maps";
+import MapView, { Marker, Region } from "react-native-maps";
 import { Button, Snackbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function PharmacyMap() {
+  const router = useRouter();
+  const { pharmacyId, cityId, distance } = useLocalSearchParams();
+
   const [language, setLanguage] = useState<string | null>();
   const [check, setCheck] = useState<boolean>(true);
   const [snackbarVisible, setSnackbarVisible] = useState<boolean>(false);
-  const { pharmacyId, cityId } = useLocalSearchParams();
-  const router = useRouter();
 
   const pharmacies = pharmaciesByCity[cityId as string];
   const pharmacy = pharmacies.find((p) => p.id === pharmacyId);
+
+  const mapRef = useRef<MapView>(null);
+  const [region, setRegion] = useState<Region>({
+    latitude: Number(pharmacy?.latitude),
+    longitude: Number(pharmacy?.longitude),
+    latitudeDelta: 0.005,
+    longitudeDelta: 0.005,
+  });
 
   useEffect(() => {
     loadLanguage();
@@ -40,6 +50,41 @@ export default function PharmacyMap() {
   const loadCheck = async () => {
     const ch = await checkLocationPermission();
     setCheck(ch);
+  };
+
+  const zoomIn = () => {
+    mapRef.current?.animateToRegion(
+      {
+        ...region,
+        latitudeDelta: region.latitudeDelta / 2,
+        longitudeDelta: region.longitudeDelta / 2,
+      },
+      300,
+    );
+  };
+
+  const zoomOut = () => {
+    mapRef.current?.animateToRegion(
+      {
+        ...region,
+        latitudeDelta: region.latitudeDelta * 2,
+        longitudeDelta: region.longitudeDelta * 2,
+      },
+      300,
+    );
+  };
+
+  const resetNorth = () => {
+    mapRef.current?.animateCamera({ heading: 0 }, { duration: 300 });
+  };
+
+  const goToPharmacy = () => {
+    mapRef.current?.animateToRegion({
+      latitude: Number(pharmacy?.latitude),
+      longitude: Number(pharmacy?.longitude),
+      latitudeDelta: 0.05,
+      longitudeDelta: 0.05,
+    });
   };
 
   const getText = () => {
@@ -89,6 +134,7 @@ export default function PharmacyMap() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -117,35 +163,86 @@ export default function PharmacyMap() {
         </View>
       </View>
 
-      <MapView
-        style={styles.map}
-        initialRegion={{
-          latitude: Number(pharmacy?.latitude),
-          longitude: Number(pharmacy?.longitude),
-          latitudeDelta: 0.005,
-          longitudeDelta: 0.005,
-        }}
-        mapType="hybrid"
-        zoomEnabled={true}
-        scrollEnabled={true}
-        rotateEnabled={true}
-        pitchEnabled={true}
-        showsCompass={true}
-        showsScale={true}
-        showsBuildings={true}
-        showsTraffic={true}
-      >
-        <Marker
-          coordinate={{
+      {/* Map */}
+      <View style={{ flex: 1 }}>
+        <MapView
+          ref={mapRef}
+          style={styles.map}
+          initialRegion={{
             latitude: Number(pharmacy?.latitude),
             longitude: Number(pharmacy?.longitude),
+            latitudeDelta: 0.005,
+            longitudeDelta: 0.005,
           }}
-          title={text.title}
-          description={text.description}
-          pinColor={pharmacy?.open ? "#09C849" : "#EF4444"}
-        />
-      </MapView>
+          onRegionChangeComplete={(r) => setRegion(r)}
+          mapType="standard"
+          zoomEnabled={true}
+          scrollEnabled={true}
+          rotateEnabled={true}
+          pitchEnabled={true}
+          showsCompass={false}
+          showsScale={false}
+          showsBuildings={true}
+          showsTraffic={false}
+          showsUserLocation={true}
+        >
+          <Marker
+            coordinate={{
+              latitude: Number(pharmacy?.latitude),
+              longitude: Number(pharmacy?.longitude),
+            }}
+            title={text.title}
+            description={text.description}
+            pinColor={pharmacy?.open ? "#09C849" : "#EF4444"}
+          />
+        </MapView>
 
+        {/* Distance Card */}
+        {distance && (
+          <View style={styles.distance_card}>
+            <Ionicons
+              name="location-outline"
+              size={14}
+              color="#1A73E8"
+              style={{ marginRight: 6 }}
+            />
+            <Text style={styles.distance_text}>
+              {formatDistance(Number(distance))}
+            </Text>
+          </View>
+        )}
+
+        {/* Zoom controls */}
+        <View style={styles.zoom_controls}>
+          <View style={styles.btn_group}>
+            <TouchableOpacity style={styles.map_btn} onPress={zoomIn}>
+              <Ionicons name="add" size={22} color="#1C1C1E" />
+            </TouchableOpacity>
+            <View style={styles.group_divider} />
+            <TouchableOpacity style={styles.map_btn} onPress={zoomOut}>
+              <Ionicons name="remove" size={22} color="#1C1C1E" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Navigation controls */}
+        <View style={styles.nav_controls}>
+          <View style={styles.btn_group}>
+            <TouchableOpacity style={styles.map_btn} onPress={resetNorth}>
+              <Ionicons name="compass-outline" size={22} color="#1C1C1E" />
+            </TouchableOpacity>
+            <View style={styles.group_divider} />
+            <TouchableOpacity
+              style={styles.map_btn_pharmacy}
+              onPress={goToPharmacy}
+            >
+              <Ionicons name="medkit-outline" size={18} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
+      {/* Footer */}
       <View style={styles.footer}>
         <View style={styles.handle} />
         <View style={styles.action_bar}>
@@ -156,8 +253,8 @@ export default function PharmacyMap() {
             )}
             buttonColor="#1A73E8"
             textColor="#fff"
-            style={styles.action_button_primary}
-            labelStyle={styles.action_button_label}
+            style={styles.action_btn_primary}
+            labelStyle={styles.action_btn_label}
           >
             {text.directions}
           </Button>
@@ -167,8 +264,8 @@ export default function PharmacyMap() {
               <Ionicons name="call-outline" size={14} color="#1A73E8" />
             )}
             textColor="#1A73E8"
-            style={styles.action_button_secondary}
-            labelStyle={styles.action_button_secondary_label}
+            style={styles.action_btn_secondary}
+            labelStyle={styles.action_btn_secondary_label}
             onPress={handleCall}
           >
             {text.call}
@@ -179,8 +276,8 @@ export default function PharmacyMap() {
               <Ionicons name="copy-outline" size={14} color="#1A73E8" />
             )}
             textColor="#1A73E8"
-            style={styles.action_button_secondary}
-            labelStyle={styles.action_button_secondary_label}
+            style={styles.action_btn_secondary}
+            labelStyle={styles.action_btn_secondary_label}
             onPress={handleCopy}
           >
             {text.copy}
@@ -216,6 +313,7 @@ const styles = StyleSheet.create({
     marginBottom: -25,
     backgroundColor: "#FFFFFF",
   },
+
   // Header
   header: {
     height: 62,
@@ -255,10 +353,79 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+
   // Map
   map: {
     flex: 1,
   },
+
+  // Distance
+  distance_card: {
+    position: "absolute",
+    top: 16,
+    right: 60,
+    alignSelf: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  distance_text: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#1C1C1E",
+  },
+
+  // Zoom controls
+  zoom_controls: {
+    position: "absolute",
+    right: 12,
+    top: 60,
+  },
+
+  // Nav controls
+  nav_controls: {
+    position: "absolute",
+    right: 12,
+    bottom: 16,
+  },
+  btn_group: {
+    borderRadius: 10,
+    backgroundColor: "#FFFFFF",
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  map_btn: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  map_btn_pharmacy: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#1A73E8",
+    position: "relative",
+  },
+  group_divider: {
+    height: 0.5,
+    backgroundColor: "#E5E7EB",
+    marginHorizontal: 8,
+  },
+
   // Footer
   footer: {
     backgroundColor: "#FFFFFF",
@@ -286,16 +453,16 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 10,
   },
-  action_button_primary: {
+  action_btn_primary: {
     borderRadius: 50,
     flex: 2,
   },
-  action_button_label: {
+  action_btn_label: {
     fontSize: 12,
     fontWeight: "600",
     letterSpacing: 0.1,
   },
-  action_button_secondary: {
+  action_btn_secondary: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
@@ -307,7 +474,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#D6E4FA",
   },
-  action_button_secondary_label: {
+  action_btn_secondary_label: {
     fontSize: 12,
     fontWeight: "600",
     color: "#1A73E8",
@@ -330,6 +497,7 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 17,
   },
+
   // Snackbar
   snackbar: {
     borderRadius: 12,

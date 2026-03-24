@@ -356,6 +356,7 @@ function CardItem({
                 params: {
                   pharmacyId: id,
                   cityId: cityId,
+                  distance: distance,
                 },
               })
             }

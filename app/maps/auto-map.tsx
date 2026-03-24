@@ -5,7 +5,7 @@ import { findNearestOpenPharmacy } from "@/utils/location/nearest-open-pharmacy"
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Linking,
   StyleSheet,
@@ -13,7 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import MapView, { Marker } from "react-native-maps";
+import MapView, { Marker, Region } from "react-native-maps";
 import { Button, Snackbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -25,6 +25,14 @@ export default function AutoMap() {
     longitude: string;
   }>();
   const router = useRouter();
+
+  const mapRef = useRef<MapView>(null);
+  const [region, setRegion] = useState<Region>({
+    latitude: 0,
+    longitude: 0,
+    latitudeDelta: 0.005,
+    longitudeDelta: 0.005,
+  });
 
   useEffect(() => {
     loadLanguage();
@@ -75,6 +83,41 @@ export default function AutoMap() {
   const isOpen = nearbypharmacy.open;
   const distance = formatDistance(nearbypharmacy.distance);
 
+  const zoomIn = () => {
+    mapRef.current?.animateToRegion(
+      {
+        ...region,
+        latitudeDelta: region.latitudeDelta / 2,
+        longitudeDelta: region.longitudeDelta / 2,
+      },
+      300,
+    );
+  };
+
+  const zoomOut = () => {
+    mapRef.current?.animateToRegion(
+      {
+        ...region,
+        latitudeDelta: region.latitudeDelta * 2,
+        longitudeDelta: region.longitudeDelta * 2,
+      },
+      300,
+    );
+  };
+
+  const resetNorth = () => {
+    mapRef.current?.animateCamera({ heading: 0 }, { duration: 300 });
+  };
+
+  const goToPharmacy = () => {
+    mapRef.current?.animateToRegion({
+      latitude: nearbypharmacy.latitude,
+      longitude: nearbypharmacy.longitude,
+      latitudeDelta: 0.05,
+      longitudeDelta: 0.05,
+    });
+  };
+
   const handleCall = () => {
     Linking.openURL(`tel:${nearbypharmacy.phone}`);
   };
@@ -114,26 +157,72 @@ export default function AutoMap() {
         </View>
       </View>
 
-      <MapView
-        style={styles.map}
-        initialRegion={{
-          latitude: nearbypharmacy.latitude,
-          longitude: nearbypharmacy.longitude,
-          latitudeDelta: 0.005,
-          longitudeDelta: 0.005,
-        }}
-        showsUserLocation
-      >
-        <Marker
-          coordinate={{
+      <View style={{ flex: 1 }}>
+        <MapView
+          ref={mapRef}
+          style={styles.map}
+          initialRegion={{
             latitude: nearbypharmacy.latitude,
             longitude: nearbypharmacy.longitude,
+            latitudeDelta: 0.005,
+            longitudeDelta: 0.005,
           }}
-          title={text.title}
-          description={text.description}
-          pinColor={isOpen ? "#09C849" : "#EF4444"}
-        />
-      </MapView>
+          onRegionChangeComplete={(r) => setRegion(r)}
+          showsUserLocation
+        >
+          <Marker
+            coordinate={{
+              latitude: nearbypharmacy.latitude,
+              longitude: nearbypharmacy.longitude,
+            }}
+            title={text.title}
+            description={text.description}
+            pinColor={isOpen ? "#09C849" : "#EF4444"}
+          />
+        </MapView>
+
+        {/* Distance Card */}
+        {distance && (
+          <View style={styles.distance_card}>
+            <Ionicons
+              name="location-outline"
+              size={14}
+              color="#1A73E8"
+              style={{ marginRight: 3 }}
+            />
+            <Text style={styles.distance_text}>{distance}</Text>
+          </View>
+        )}
+
+        {/* Zoom controls */}
+        <View style={styles.zoom_controls}>
+          <View style={styles.btn_group}>
+            <TouchableOpacity style={styles.map_btn} onPress={zoomIn}>
+              <Ionicons name="add" size={22} color="#1C1C1E" />
+            </TouchableOpacity>
+            <View style={styles.group_divider} />
+            <TouchableOpacity style={styles.map_btn} onPress={zoomOut}>
+              <Ionicons name="remove" size={22} color="#1C1C1E" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Nav controls */}
+        <View style={styles.nav_controls}>
+          <View style={styles.btn_group}>
+            <TouchableOpacity style={styles.map_btn} onPress={resetNorth}>
+              <Ionicons name="compass-outline" size={22} color="#1C1C1E" />
+            </TouchableOpacity>
+            <View style={styles.group_divider} />
+            <TouchableOpacity
+              style={styles.map_btn_pharmacy}
+              onPress={goToPharmacy}
+            >
+              <Ionicons name="medkit-outline" size={18} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
 
       <View style={styles.footer}>
         <View style={styles.handle} />
@@ -196,6 +285,7 @@ const styles = StyleSheet.create({
     marginBottom: -25,
     backgroundColor: "#FFFFFF",
   },
+
   // Header
   header: {
     height: 62,
@@ -235,10 +325,78 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+
   // Map
   map: {
     flex: 1,
   },
+
+  // Distance
+  distance_card: {
+    position: "absolute",
+    top: 16,
+    right: 60,
+    alignSelf: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  distance_text: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#1C1C1E",
+  },
+
+  // Zoom controls
+  zoom_controls: {
+    position: "absolute",
+    right: 12,
+    top: 70,
+  },
+
+  // Nav controls
+  nav_controls: {
+    position: "absolute",
+    right: 12,
+    bottom: 16,
+  },
+  btn_group: {
+    borderRadius: 10,
+    backgroundColor: "#FFFFFF",
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  map_btn: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  map_btn_pharmacy: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#1A73E8",
+  },
+  group_divider: {
+    height: 0.5,
+    backgroundColor: "#E5E7EB",
+    marginHorizontal: 8,
+  },
+
   // Footer
   footer: {
     backgroundColor: "#FFFFFF",
@@ -293,6 +451,7 @@ const styles = StyleSheet.create({
     color: "#1A73E8",
     letterSpacing: 0.1,
   },
+
   // Snackbar
   snackbar: {
     borderRadius: 12,

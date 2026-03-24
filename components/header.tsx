@@ -27,6 +27,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 10,
     borderRadius: 16,
+    marginTop: 10,
   },
   logo_image: {
     width: 70,
