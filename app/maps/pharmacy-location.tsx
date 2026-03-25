@@ -20,7 +20,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function PharmacyMap() {
   const router = useRouter();
-  const { pharmacyId, cityId, distance } = useLocalSearchParams();
+  const { pharmacyId, cityId, distance, cityName, cityNameAr } =
+    useLocalSearchParams();
 
   const [language, setLanguage] = useState<string | null>();
   const [check, setCheck] = useState<boolean>(true);
@@ -92,6 +93,7 @@ export default function PharmacyMap() {
       return {
         title: pharmacy?.nameAr,
         description: pharmacy?.addressAr,
+        displayCityName: cityNameAr,
         directions: "الاتجاهات",
         call: "اتصال",
         copy: "نسخ",
@@ -102,6 +104,7 @@ export default function PharmacyMap() {
       return {
         title: pharmacy?.name,
         description: pharmacy?.address,
+        displayCityName: cityName,
         directions: "Itinéraire",
         call: "Appeler",
         copy: "Copier",
@@ -112,6 +115,7 @@ export default function PharmacyMap() {
       return {
         title: pharmacy?.name,
         description: pharmacy?.address,
+        displayCityName: cityName,
         directions: "Directions",
         call: "Call",
         copy: "Copy",
@@ -197,11 +201,22 @@ export default function PharmacyMap() {
           />
         </MapView>
 
+        {/* City Card */}
+        <View style={styles.city_card}>
+          <Ionicons
+            name="location"
+            size={14}
+            color="#1A73E8"
+            style={{ marginRight: 3 }}
+          />
+          <Text style={styles.city_text}>{text.displayCityName}</Text>
+        </View>
+
         {/* Distance Card */}
         {distance && (
           <View style={styles.distance_card}>
             <Ionicons
-              name="location-outline"
+              name="navigate"
               size={14}
               color="#1A73E8"
               style={{ marginRight: 6 }}
@@ -212,7 +227,7 @@ export default function PharmacyMap() {
           </View>
         )}
 
-        {/* Zoom controls */}
+        {/* Zoom Controls */}
         <View style={styles.zoom_controls}>
           <View style={styles.btn_group}>
             <TouchableOpacity style={styles.map_btn} onPress={zoomIn}>
@@ -225,7 +240,7 @@ export default function PharmacyMap() {
           </View>
         </View>
 
-        {/* Navigation controls */}
+        {/* Navigation Controls */}
         <View style={styles.nav_controls}>
           <View style={styles.btn_group}>
             <TouchableOpacity style={styles.map_btn} onPress={resetNorth}>
@@ -359,14 +374,36 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  // Distance
+  // City Card
+  city_card: {
+    position: "absolute",
+    top: 16,
+    left: 20,
+    flexDirection: "row",
+    alignItems: "baseline",
+    backgroundColor: "#FFFFFF",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  city_text: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#1C1C1E",
+  },
+
+  // Distance Card
   distance_card: {
     position: "absolute",
     top: 16,
     right: 60,
-    alignSelf: "center",
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "baseline",
     backgroundColor: "#FFFFFF",
     paddingVertical: 6,
     paddingHorizontal: 12,
@@ -383,14 +420,14 @@ const styles = StyleSheet.create({
     color: "#1C1C1E",
   },
 
-  // Zoom controls
+  // Zoom Controls
   zoom_controls: {
     position: "absolute",
     right: 12,
     top: 60,
   },
 
-  // Nav controls
+  // Navigation Controls
   nav_controls: {
     position: "absolute",
     right: 12,
@@ -418,7 +455,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#1A73E8",
-    position: "relative",
   },
   group_divider: {
     height: 0.5,

@@ -155,7 +155,7 @@ function CardItem({
             onPress={() =>
               router.push({
                 pathname: "/(tabs)/search/pharmacies",
-                params: { cityId: id },
+                params: { cityId: id, cityName: name, cityNameAr: nameAr },
               })
             }
             style={styles.card_button}

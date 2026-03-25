@@ -27,7 +27,7 @@ export default function PharmaciesPage() {
   const [searchParmacy, setSearchParmacy] = useState("");
   const [language, setLanguage] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState("all");
-  const { cityId } = useLocalSearchParams();
+  const { cityId, cityName, cityNameAr } = useLocalSearchParams();
   const pharmacies = pharmaciesByCity[cityId as string] || [];
   const [pharmaciesWithDistance, setPharmaciesWithDistance] =
     useState<((typeof pharmacies)[0] & { distance?: number })[]>(pharmacies);
@@ -204,6 +204,8 @@ export default function PharmaciesPage() {
             nameAr={item.nameAr}
             name={item.name}
             cityId={cityId as string}
+            cityName={cityName as string}
+            cityNameAr={cityNameAr as string}
             addressAr={item.addressAr}
             address={item.address}
             phone={item.phone}
@@ -227,6 +229,8 @@ function CardItem({
   nameAr,
   name,
   cityId,
+  cityName,
+  cityNameAr,
   addressAr,
   address,
   phone,
@@ -241,6 +245,8 @@ function CardItem({
   nameAr: string;
   name: string;
   cityId: string;
+  cityName: string;
+  cityNameAr: string;
   addressAr: string;
   address: string;
   phone: string;
@@ -357,6 +363,8 @@ function CardItem({
                   pharmacyId: id,
                   cityId: cityId,
                   distance: distance,
+                  cityName: cityName,
+                  cityNameAr: cityNameAr,
                 },
               })
             }

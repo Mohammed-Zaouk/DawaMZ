@@ -48,6 +48,8 @@ export default function AutoMap() {
     Number(longitude),
   );
 
+  if (!nearbypharmacy) return null;
+
   const getText = () => {
     if (language === "ar") {
       return {
@@ -57,6 +59,7 @@ export default function AutoMap() {
         call: "اتصال",
         copy: "نسخ",
         copied: "تم نسخ العنوان",
+        displayCityName: nearbypharmacy.cityNameAr,
       };
     } else if (language === "fr") {
       return {
@@ -66,6 +69,7 @@ export default function AutoMap() {
         call: "Appeler",
         copy: "Copier",
         copied: "Adresse copiée",
+        displayCityName: nearbypharmacy.cityName,
       };
     } else {
       return {
@@ -75,6 +79,7 @@ export default function AutoMap() {
         call: "Call",
         copy: "Copy",
         copied: "Address copied to clipboard",
+        displayCityName: nearbypharmacy.cityName,
       };
     }
   };
@@ -129,6 +134,7 @@ export default function AutoMap() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -157,6 +163,7 @@ export default function AutoMap() {
         </View>
       </View>
 
+      {/* Map */}
       <View style={{ flex: 1 }}>
         <MapView
           ref={mapRef}
@@ -181,20 +188,31 @@ export default function AutoMap() {
           />
         </MapView>
 
+        {/* City Card */}
+        <View style={styles.city_card}>
+          <Ionicons
+            name="location"
+            size={14}
+            color="#1A73E8"
+            style={{ marginRight: 3 }}
+          />
+          <Text style={styles.city_text}>{text.displayCityName}</Text>
+        </View>
+
         {/* Distance Card */}
         {distance && (
           <View style={styles.distance_card}>
             <Ionicons
-              name="location-outline"
+              name="navigate"
               size={14}
               color="#1A73E8"
-              style={{ marginRight: 3 }}
+              style={{ marginRight: 6 }}
             />
             <Text style={styles.distance_text}>{distance}</Text>
           </View>
         )}
 
-        {/* Zoom controls */}
+        {/* Zoom Controls */}
         <View style={styles.zoom_controls}>
           <View style={styles.btn_group}>
             <TouchableOpacity style={styles.map_btn} onPress={zoomIn}>
@@ -207,7 +225,7 @@ export default function AutoMap() {
           </View>
         </View>
 
-        {/* Nav controls */}
+        {/* Navigation Controls */}
         <View style={styles.nav_controls}>
           <View style={styles.btn_group}>
             <TouchableOpacity style={styles.map_btn} onPress={resetNorth}>
@@ -224,6 +242,7 @@ export default function AutoMap() {
         </View>
       </View>
 
+      {/* Footer */}
       <View style={styles.footer}>
         <View style={styles.handle} />
         <View style={styles.action_bar}>
@@ -331,12 +350,34 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  // Distance
+  // City Card
+  city_card: {
+    position: "absolute",
+    top: 16,
+    left: 20,
+    flexDirection: "row",
+    alignItems: "baseline",
+    backgroundColor: "#FFFFFF",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  city_text: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#1C1C1E",
+  },
+
+  // Distance Card
   distance_card: {
     position: "absolute",
     top: 16,
     right: 60,
-    alignSelf: "center",
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#FFFFFF",
@@ -355,14 +396,14 @@ const styles = StyleSheet.create({
     color: "#1C1C1E",
   },
 
-  // Zoom controls
+  // Zoom Controls
   zoom_controls: {
     position: "absolute",
     right: 12,
     top: 70,
   },
 
-  // Nav controls
+  // Navigation Controls
   nav_controls: {
     position: "absolute",
     right: 12,
