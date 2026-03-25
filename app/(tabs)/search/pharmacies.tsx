@@ -67,6 +67,15 @@ export default function PharmaciesPage() {
         distance: "المسافة",
         locationPermission: "يرجى تفعيل الموقع لعرض المسافة",
         search: "ابحث عن صيدلية...",
+        noResults: "لا توجد صيدليات مطابقة",
+        noResultsSub: "متأكد من الاسم؟ اقترحها لإضافتها.",
+        suggestButton: "اقتراح صيدلية",
+        noData: "لا توجد صيدليات مفتوحة",
+        noDataSub: "لا توجد صيدليات مفتوحة حالياً في هذه المدينة",
+        noNightData: "لا توجد صيدليات ليلية مفتوحة",
+        noNightDataSub: "لا توجد صيدليات ليلية مفتوحة حالياً في هذه المدينة",
+        noOnCallData: "لا توجد صيدليات مناوبة مفتوحة",
+        noOnCallDataSub: "لا توجد صيدليات مناوبة مفتوحة حالياً في هذه المدينة",
       };
     } else if (language === "fr") {
       return {
@@ -81,6 +90,18 @@ export default function PharmaciesPage() {
         locationPermission:
           "Veuillez activer la localisation pour voir la distance",
         search: "Rechercher une pharmacie...",
+        noResults: "Aucune pharmacie trouvée",
+        noResultsSub: "Vous êtes sûr du nom ? Suggérez-la pour l'ajouter.",
+        suggestButton: "Suggérer une pharmacie",
+        noData: "Aucune pharmacie ouverte",
+        noDataSub:
+          "Aucune pharmacie n'est ouverte en ce moment dans cette ville",
+        noNightData: "Aucune pharmacie de nuit ouverte",
+        noNightDataSub:
+          "Aucune pharmacie de nuit n'est ouverte en ce moment dans cette ville",
+        noOnCallData: "Aucune pharmacie de garde ouverte",
+        noOnCallDataSub:
+          "Aucune pharmacie de garde n'est ouverte en ce moment dans cette ville",
       };
     } else {
       return {
@@ -94,6 +115,16 @@ export default function PharmaciesPage() {
         distance: "Distance",
         locationPermission: "Please enable location to see distance",
         search: "Search pharmacies...",
+        noResults: "No pharmacies found",
+        noResultsSub: "Sure of the name? Tap below to suggest adding it.",
+        suggestButton: "Suggest a Pharmacy",
+        noData: "No open pharmacies",
+        noDataSub: "No pharmacies are currently open in this city",
+        noNightData: "No open night pharmacies",
+        noNightDataSub: "No night pharmacies are currently open in this city",
+        noOnCallData: "No open on-call pharmacies",
+        noOnCallDataSub:
+          "No on-call pharmacies are currently open in this city",
       };
     }
   };
@@ -101,9 +132,9 @@ export default function PharmaciesPage() {
   const text = getText();
 
   const filteredPharmacies = pharmaciesWithDistance.filter((pharmacy) => {
-    if (activeFilter === "all") return true;
-    else if (activeFilter === "night") return pharmacy.isNightPharmacy === true;
-    else return pharmacy.isOnCall === true;
+    if (activeFilter === "night") return pharmacy.isNightPharmacy === true;
+    else if (activeFilter === "oncall") return pharmacy.isOnCall === true;
+    return pharmacy.open === true;
   });
 
   const filterData = filteredPharmacies.filter(
@@ -213,8 +244,72 @@ export default function PharmaciesPage() {
         )}
         contentContainerStyle={styles.list_container}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <EmptyState
+            text={text}
+            isSearching={searchParmacy.length > 0}
+            activeFilter={activeFilter}
+          />
+        }
       />
     </SafeAreaView>
+  );
+}
+
+function EmptyState({
+  text,
+  isSearching,
+  activeFilter,
+}: {
+  text: any;
+  isSearching: boolean;
+  activeFilter: string;
+}) {
+  const getContent = () => {
+    if (isSearching) {
+      return {
+        icon: "search-outline" as const,
+        title: text.noResults,
+        subtitle: text.noResultsSub,
+      };
+    }
+    if (activeFilter === "night") {
+      return {
+        icon: "moon-outline" as const,
+        title: text.noNightData,
+        subtitle: text.noNightDataSub,
+      };
+    }
+    if (activeFilter === "oncall") {
+      return {
+        icon: "call-outline" as const,
+        title: text.noOnCallData,
+        subtitle: text.noOnCallDataSub,
+      };
+    }
+    return {
+      icon: "medkit-outline" as const,
+      title: text.noData,
+      subtitle: text.noDataSub,
+    };
+  };
+
+  const { icon, title, subtitle } = getContent();
+
+  return (
+    <View style={styles.empty_container}>
+      <View style={styles.empty_icon_wrapper}>
+        <Ionicons name={icon} size={32} color="#90b8e0" />
+      </View>
+      <Text style={styles.empty_title}>{title}</Text>
+      <Text style={styles.empty_subtitle}>{subtitle}</Text>
+      {isSearching && (
+        <TouchableOpacity style={styles.suggest_button} onPress={() => {}}>
+          <Ionicons name="add-circle-outline" size={15} color="#ffffff" />
+          <Text style={styles.suggest_button_label}>{text.suggestButton}</Text>
+        </TouchableOpacity>
+      )}
+    </View>
   );
 }
 
@@ -505,5 +600,49 @@ const styles = StyleSheet.create({
   button_text: {
     fontSize: 13,
     color: "#3385FF",
+  },
+  // Empty State
+  empty_container: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 60,
+  },
+  empty_icon_wrapper: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+  },
+  empty_title: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#ffffff",
+    letterSpacing: 0.2,
+  },
+  empty_subtitle: {
+    fontSize: 13,
+    color: "rgba(255, 255, 255, 0.7)",
+    fontWeight: "400",
+  },
+  suggest_button: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 6,
+    paddingVertical: 9,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.35)",
+  },
+  suggest_button_label: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#ffffff",
+    letterSpacing: 0.3,
   },
 });

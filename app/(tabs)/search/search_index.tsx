@@ -2,6 +2,7 @@ import BackgroundBubbles from "@/components/background_bubbles";
 import Divider from "@/components/divider_line";
 import { useLanguage } from "@/context/LanguageContext";
 import { regions } from "@/data/regions";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { FlatList, Image, StyleSheet, Text, View } from "react-native";
@@ -13,13 +14,25 @@ export default function SearchIndex() {
   const { language } = useLanguage();
   const getText = () => {
     if (language === "ar")
-      return { button: "عرض المدن", search: "ابحث عن منطقة أو مدينة..." };
+      return {
+        button: "عرض المدن",
+        search: "ابحث عن منطقة أو مدينة...",
+        noResults: "لا توجد مناطق مطابقة",
+        noResultsSub: "جرّب كلمة بحث مختلفة",
+      };
     if (language === "fr")
       return {
         button: "Voir les villes",
         search: "Rechercher une région ou ville...",
+        noResults: "Aucune région trouvée",
+        noResultsSub: "Essayez un autre terme de recherche",
       };
-    return { button: "View Cities", search: "Search regions or cities..." };
+    return {
+      button: "View Cities",
+      search: "Search regions or cities...",
+      noResults: "No regions found",
+      noResultsSub: "Try a different search term",
+    };
   };
 
   const text = getText();
@@ -67,8 +80,37 @@ export default function SearchIndex() {
         )}
         contentContainerStyle={styles.list_container}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <EmptyState text={text} isSearching={searchRegion.length > 0} />
+        }
       />
     </SafeAreaView>
+  );
+}
+
+function EmptyState({
+  text,
+  isSearching,
+}: {
+  text: any;
+  isSearching: boolean;
+}) {
+  return (
+    <View style={styles.empty_container}>
+      <View style={styles.empty_icon_wrapper}>
+        <Ionicons
+          name={isSearching ? "search-outline" : "location-outline"}
+          size={32}
+          color="#90b8e0"
+        />
+      </View>
+      <Text style={styles.empty_title}>
+        {isSearching ? text.noResults : text.noData}
+      </Text>
+      <Text style={styles.empty_subtitle}>
+        {isSearching ? text.noResultsSub : text.noDataSub}
+      </Text>
+    </View>
   );
 }
 
@@ -220,5 +262,31 @@ const styles = StyleSheet.create({
   card_image: {
     height: 110,
     width: 110,
+  },
+  // Empty State
+  empty_container: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 60,
+  },
+  empty_icon_wrapper: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+  },
+  empty_title: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#ffffff",
+    letterSpacing: 0.2,
+  },
+  empty_subtitle: {
+    fontSize: 13,
+    color: "rgba(255, 255, 255, 0.7)",
+    fontWeight: "400",
   },
 });

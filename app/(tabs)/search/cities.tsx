@@ -7,7 +7,14 @@ import { pharmaciesByCity } from "@/data/pharmacies";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { FlatList, Image, StyleSheet, Text, View } from "react-native";
+import {
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Button, Searchbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -29,6 +36,11 @@ export default function CitiesPage() {
         open: (count: number) => `${count} مفتوحة الان`,
         button: "عرض الصيدليات المفتوحة",
         search: "ابحث عن مدينة...",
+        noResults: "لا توجد مدن مطابقة",
+        noResultsSub: "متأكد من اسم المدينة؟ اقترحها لإضافتها.",
+        suggestButton: "اقتراح مدينة",
+        noData: "لا توجد مدن متاحة",
+        noDataSub: "لم يتم إضافة أي مدينة لهذه المنطقة بعد",
       };
     } else if (language === "fr") {
       return {
@@ -36,6 +48,11 @@ export default function CitiesPage() {
         open: (count: number) => `${count} ouvertes`,
         button: "Voir les pharmacies ouvertes",
         search: "Rechercher une ville...",
+        noResults: "Aucune ville trouvée",
+        noResultsSub: "Vous êtes sûr du nom ? Suggérez-la pour l'ajouter.",
+        suggestButton: "Suggérer une ville",
+        noData: "Aucune ville disponible",
+        noDataSub: "Aucune ville n'a encore été ajoutée pour cette région",
       };
     } else {
       return {
@@ -43,6 +60,11 @@ export default function CitiesPage() {
         open: (count: number) => `${count} open now`,
         button: "View Open Pharmacies",
         search: "Search cities...",
+        noResults: "No cities found",
+        noResultsSub: "Sure of the name? Tap below to suggest adding it.",
+        suggestButton: "Suggest a City",
+        noData: "No cities available",
+        noDataSub: "No cities have been added for this region yet",
       };
     }
   };
@@ -76,8 +98,43 @@ export default function CitiesPage() {
         )}
         contentContainerStyle={styles.list_container}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <EmptyState text={text} isSearching={searchCity.length > 0} />
+        }
       />
     </SafeAreaView>
+  );
+}
+
+function EmptyState({
+  text,
+  isSearching,
+}: {
+  text: any;
+  isSearching: boolean;
+}) {
+  return (
+    <View style={styles.empty_container}>
+      <View style={styles.empty_icon_wrapper}>
+        <Ionicons
+          name={isSearching ? "search-outline" : "location-outline"}
+          size={32}
+          color="#90b8e0"
+        />
+      </View>
+      <Text style={styles.empty_title}>
+        {isSearching ? text.noResults : text.noData}
+      </Text>
+      <Text style={styles.empty_subtitle}>
+        {isSearching ? text.noResultsSub : text.noDataSub}
+      </Text>
+      {isSearching && (
+        <TouchableOpacity style={styles.suggest_button} onPress={() => {}}>
+          <Ionicons name="add-circle-outline" size={15} color="#ffffff" />
+          <Text style={styles.suggest_button_label}>{text.suggestButton}</Text>
+        </TouchableOpacity>
+      )}
+    </View>
   );
 }
 
@@ -269,5 +326,48 @@ const styles = StyleSheet.create({
   card_image: {
     width: "100%",
     height: "100%",
+  },
+  empty_container: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 60,
+  },
+  empty_icon_wrapper: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+  },
+  empty_title: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#ffffff",
+    letterSpacing: 0.2,
+  },
+  empty_subtitle: {
+    fontSize: 13,
+    color: "rgba(255, 255, 255, 0.7)",
+    fontWeight: "400",
+  },
+  suggest_button: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 6,
+    paddingVertical: 9,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.35)",
+  },
+  suggest_button_label: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#ffffff",
+    letterSpacing: 0.3,
   },
 });
