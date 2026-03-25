@@ -1,28 +1,16 @@
 import BackgroundBubbles from "@/components/background_bubbles";
 import Header from "@/components/header";
-import { getLanguage } from "@/utils/getLanguage";
-import { useFocusEffect } from "@react-navigation/native";
+import { useLanguage } from "@/context/LanguageContext";
 import { useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Divider, List, Switch } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Menu() {
-  const [language, setLanguage] = useState<string | null>(null);
+  const { language } = useLanguage();
   const [themeMode, setThemeMode] = useState<boolean>(false);
   const router = useRouter();
-
-  useFocusEffect(
-    useCallback(() => {
-      loadLanguage();
-    }, []),
-  );
-
-  const loadLanguage = async () => {
-    const lang = await getLanguage();
-    setLanguage(lang);
-  };
 
   const getText = () => {
     if (language === "ar") {

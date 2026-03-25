@@ -1,21 +1,11 @@
 import BackgroundBubbles from "@/components/background_bubbles";
 import Header from "@/components/header";
-import { getLanguage } from "@/utils/getLanguage";
-import { useEffect, useState } from "react";
+import { useLanguage } from "@/context/LanguageContext";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function About() {
-  const [language, setLanguage] = useState<string | null>(null);
-
-  useEffect(() => {
-    loadLanguage();
-  }, []);
-
-  const loadLanguage = async () => {
-    const lang = await getLanguage();
-    setLanguage(lang);
-  };
+  const { language } = useLanguage();
 
   const getText = () => {
     const currentYear = new Date().getFullYear();

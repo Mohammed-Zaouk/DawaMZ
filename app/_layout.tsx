@@ -1,3 +1,4 @@
+import { LanguageProvider } from "@/context/LanguageContext";
 import { getLanguage } from "@/utils/getLanguage";
 import { Stack, useRootNavigationState, useRouter } from "expo-router";
 import { useEffect } from "react";
@@ -22,10 +23,12 @@ export default function RootLayout() {
   };
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="onboarding/language_selection" />
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="maps" />
-    </Stack>
+    <LanguageProvider>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="onboarding/language_selection" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="maps" />
+      </Stack>
+    </LanguageProvider>
   );
 }

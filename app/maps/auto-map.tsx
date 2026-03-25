@@ -1,11 +1,11 @@
 import { PulseDot } from "@/components/pulse_dot";
-import { getLanguage } from "@/utils/getLanguage";
+import { useLanguage } from "@/context/LanguageContext";
 import { formatDistance } from "@/utils/location/calculateDistance";
 import { findNearestOpenPharmacy } from "@/utils/location/nearest-open-pharmacy";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   Linking,
   StyleSheet,
@@ -18,7 +18,7 @@ import { Button, Snackbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function AutoMap() {
-  const [language, setLanguage] = useState<string | null>();
+  const { language } = useLanguage();
   const [snackbarVisible, setSnackbarVisible] = useState<boolean>(false);
   const { latitude, longitude } = useLocalSearchParams<{
     latitude: string;
@@ -33,15 +33,6 @@ export default function AutoMap() {
     latitudeDelta: 0.005,
     longitudeDelta: 0.005,
   });
-
-  useEffect(() => {
-    loadLanguage();
-  }, []);
-
-  const loadLanguage = async () => {
-    const lang = await getLanguage();
-    setLanguage(lang);
-  };
 
   const nearbypharmacy = findNearestOpenPharmacy(
     Number(latitude),

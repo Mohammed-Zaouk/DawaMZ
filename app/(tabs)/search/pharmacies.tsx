@@ -1,8 +1,8 @@
 import BackgroundBubbles from "@/components/background_bubbles";
 import Divider from "@/components/divider_line";
 import { PulseDot } from "@/components/pulse_dot";
+import { useLanguage } from "@/context/LanguageContext";
 import { pharmaciesByCity } from "@/data/pharmacies";
-import { getLanguage } from "@/utils/getLanguage";
 import {
   calculateDistance,
   formatDistance,
@@ -25,7 +25,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function PharmaciesPage() {
   const [searchParmacy, setSearchParmacy] = useState("");
-  const [language, setLanguage] = useState<string | null>(null);
+  const { language } = useLanguage();
   const [activeFilter, setActiveFilter] = useState("all");
   const { cityId, cityName, cityNameAr } = useLocalSearchParams();
   const pharmacies = pharmaciesByCity[cityId as string] || [];
@@ -33,14 +33,8 @@ export default function PharmaciesPage() {
     useState<((typeof pharmacies)[0] & { distance?: number })[]>(pharmacies);
 
   useEffect(() => {
-    loadLanguage();
     calcDistance();
   }, []);
-
-  const loadLanguage = async () => {
-    const lang = await getLanguage();
-    setLanguage(lang);
-  };
 
   const calcDistance = async () => {
     const loc = await getUserLocation();

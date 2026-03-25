@@ -1,29 +1,16 @@
 import BackgroundBubbles from "@/components/background_bubbles";
 import Divider from "@/components/divider_line";
+import { useLanguage } from "@/context/LanguageContext";
 import { regions } from "@/data/regions";
-import { getLanguage } from "@/utils/getLanguage";
-import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { FlatList, Image, StyleSheet, Text, View } from "react-native";
 import { Button, Searchbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SearchIndex() {
   const [searchRegion, setSearchRegion] = useState("");
-  const [language, setLanguage] = useState<string | null>(null);
-
-  useFocusEffect(
-    useCallback(() => {
-      loadLanguage();
-    }, []),
-  );
-
-  const loadLanguage = async () => {
-    const lang = await getLanguage();
-    setLanguage(lang);
-  };
-
+  const { language } = useLanguage();
   const getText = () => {
     if (language === "ar")
       return { button: "عرض المدن", search: "ابحث عن منطقة أو مدينة..." };

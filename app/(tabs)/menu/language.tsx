@@ -1,34 +1,23 @@
 import BackgroundBubbles from "@/components/background_bubbles";
 import Header from "@/components/header";
-import { getLanguage } from "@/utils/getLanguage";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useLanguage } from "@/context/LanguageContext";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Button } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Language() {
-  const [selectedLanguage, setSelectedLanguage] = useState<string | null>();
+  const { language, setLanguage } = useLanguage();
+  const [selectedLanguage, setSelectedLanguage] = useState(language);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const router = useRouter();
 
-  useEffect(() => {
-    loadLanguage();
-  }, []);
-
-  const loadLanguage = async () => {
-    const lang = await getLanguage();
-    setSelectedLanguage(lang);
-  };
-
-  const saveLanguage = async (Language: string) => {
+  const saveLanguage = async () => {
+    if (!selectedLanguage) return;
     setIsLoading(true);
-
-    await AsyncStorage.setItem("selectedLanguage", Language);
-
+    await setLanguage(selectedLanguage);
     await new Promise((resolve) => setTimeout(resolve, 1000));
-
     setIsLoading(false);
     router.push("/(tabs)/menu");
   };
@@ -106,11 +95,7 @@ export default function Language() {
         <View style={styles.save_section}>
           <Button
             mode="contained"
-            onPress={() => {
-              if (selectedLanguage) {
-                saveLanguage(selectedLanguage);
-              }
-            }}
+            onPress={saveLanguage}
             style={styles.save_button}
             buttonColor="#2196F3"
             textColor="#FFFFFF"

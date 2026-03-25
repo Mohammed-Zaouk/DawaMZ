@@ -1,19 +1,19 @@
 import BackgroundBubbles from "@/components/background_bubbles";
 import Divider from "@/components/divider_line";
 import { PulseDot } from "@/components/pulse_dot";
+import { useLanguage } from "@/context/LanguageContext";
 import { citiesByRegion } from "@/data/cities";
 import { pharmaciesByCity } from "@/data/pharmacies";
-import { getLanguage } from "@/utils/getLanguage";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FlatList, Image, StyleSheet, Text, View } from "react-native";
 import { Button, Searchbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function CitiesPage() {
   const [searchCity, setSearchCity] = useState("");
-  const [language, setLanguage] = useState<string | null>(null);
+  const { language } = useLanguage();
   const { regionId } = useLocalSearchParams();
   const cities = citiesByRegion[regionId as string] || [];
   const filterData = cities.filter(
@@ -21,15 +21,6 @@ export default function CitiesPage() {
       city.name.toLowerCase().includes(searchCity.toLowerCase()) ||
       city.nameAr.includes(searchCity),
   );
-
-  useEffect(() => {
-    loadLanguage();
-  }, []);
-
-  const loadLanguage = async () => {
-    const lang = await getLanguage();
-    setLanguage(lang);
-  };
 
   const getText = () => {
     if (language === "ar") {

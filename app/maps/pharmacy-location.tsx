@@ -1,6 +1,6 @@
 import { PulseDot } from "@/components/pulse_dot";
+import { useLanguage } from "@/context/LanguageContext";
 import { pharmaciesByCity } from "@/data/pharmacies";
-import { getLanguage } from "@/utils/getLanguage";
 import { formatDistance } from "@/utils/location/calculateDistance";
 import { checkLocationPermission } from "@/utils/location/getLocation";
 import { Ionicons } from "@expo/vector-icons";
@@ -23,7 +23,7 @@ export default function PharmacyMap() {
   const { pharmacyId, cityId, distance, cityName, cityNameAr } =
     useLocalSearchParams();
 
-  const [language, setLanguage] = useState<string | null>();
+  const { language } = useLanguage();
   const [check, setCheck] = useState<boolean>(true);
   const [snackbarVisible, setSnackbarVisible] = useState<boolean>(false);
 
@@ -39,14 +39,8 @@ export default function PharmacyMap() {
   });
 
   useEffect(() => {
-    loadLanguage();
     loadCheck();
   }, []);
-
-  const loadLanguage = async () => {
-    const lang = await getLanguage();
-    setLanguage(lang);
-  };
 
   const loadCheck = async () => {
     const ch = await checkLocationPermission();

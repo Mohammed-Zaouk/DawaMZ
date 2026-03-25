@@ -1,10 +1,8 @@
 import BackgroundBubbles from "@/components/background_bubbles";
-import { getLanguage } from "@/utils/getLanguage";
+import { useLanguage } from "@/context/LanguageContext";
 import { getUserLocation } from "@/utils/location/getLocation";
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import { useCallback, useState } from "react";
 import {
   Alert,
   Image,
@@ -18,18 +16,7 @@ import Divider from "../../components/divider_line";
 
 export default function Index() {
   const router = useRouter();
-  const [language, setLanguage] = useState<string | null>();
-
-  useFocusEffect(
-    useCallback(() => {
-      loadLanguage();
-    }, []),
-  );
-
-  const loadLanguage = async () => {
-    const lang = await getLanguage();
-    setLanguage(lang);
-  };
+  const { language } = useLanguage();
 
   const mapRedirect = async () => {
     const loc = await getUserLocation();

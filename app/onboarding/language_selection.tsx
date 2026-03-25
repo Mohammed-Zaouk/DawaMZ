@@ -1,21 +1,24 @@
 import BackgroundBubbles from "@/components/background_bubbles";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useLanguage } from "@/context/LanguageContext";
 import { useRouter } from "expo-router";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+type Language = "ar" | "fr" | "en";
 
 const LANGUAGES = [
   { code: "ar", label: "العربية", flag: "🇲🇦", sub: "Arabic" },
   { code: "en", label: "English", flag: "🇬🇧", sub: "English" },
   { code: "fr", label: "Français", flag: "🇫🇷", sub: "French" },
-];
+] as const;
 
 export default function LanguageSelectionPage() {
+  const { setLanguage } = useLanguage();
   const router = useRouter();
 
-  const saveLanguage = async (language: string) => {
+  const saveLanguage = async (language: Language) => {
     try {
-      await AsyncStorage.setItem("selectedLanguage", language);
+      await setLanguage(language);
       router.replace("/(tabs)");
     } catch (error) {
       console.error("Error saving language:", error);
