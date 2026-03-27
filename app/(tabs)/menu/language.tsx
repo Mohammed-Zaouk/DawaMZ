@@ -3,7 +3,7 @@ import Header from "@/components/header";
 import { useLanguage } from "@/context/LanguageContext";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Button } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -24,30 +24,24 @@ export default function Language() {
 
   const getText = () => {
     if (selectedLanguage === "ar") {
-      return {
-        pageTitle: "اختر اللغة",
-        pageSubtitle: "اختر لغتك المفضلة",
-        saveButton: "حفظ التغييرات",
-        saving: "جاري الحفظ...",
-      };
+      return { saveButton: "حفظ التغييرات", saving: "جاري الحفظ..." };
     } else if (selectedLanguage === "fr") {
       return {
-        pageTitle: "Sélectionner la langue",
-        pageSubtitle: "Choisissez votre langue préférée",
         saveButton: "Enregistrer les modifications",
         saving: "Enregistrement...",
       };
     } else {
-      return {
-        pageTitle: "Select Language",
-        pageSubtitle: "Choose your preferred language",
-        saveButton: "Save Changes",
-        saving: "Saving...",
-      };
+      return { saveButton: "Save Changes", saving: "Saving..." };
     }
   };
 
   const text = getText();
+
+  const languages = [
+    { code: "ar", flag: "🇲🇦", nativeName: "العربية", label: "Arabic" },
+    { code: "en", flag: "🇬🇧", nativeName: "English", label: "English" },
+    { code: "fr", flag: "🇫🇷", nativeName: "Français", label: "French" },
+  ] as const;
 
   return (
     <SafeAreaView style={styles.screen_container}>
@@ -56,40 +50,57 @@ export default function Language() {
 
       <View style={styles.content_container}>
         <View style={styles.title_section}>
-          <Text style={styles.page_title}>{text.pageTitle}</Text>
-          <Text style={styles.page_subtitle}>{text.pageSubtitle}</Text>
+          <View style={styles.title_divider_row}>
+            <View style={styles.title_line} />
+            <View style={styles.title_text_block}>
+              <Text style={styles.title_arabic}>اختر اللغة</Text>
+              <Text style={styles.title_main}>Choose Your Language</Text>
+              <Text style={styles.title_sub}>Choisissez la langue</Text>
+            </View>
+            <View style={styles.title_line} />
+          </View>
         </View>
 
         <View style={styles.buttons_section}>
-          <Button
-            mode="contained"
-            onPress={() => setSelectedLanguage("ar")}
-            style={styles.language_button}
-            buttonColor={selectedLanguage === "ar" ? "#09C849" : "#FFFFFF"}
-            textColor={selectedLanguage === "ar" ? "#FFFFFF" : "#1E7FC1"}
-          >
-            🇲🇦 العربية
-          </Button>
-
-          <Button
-            mode="contained"
-            onPress={() => setSelectedLanguage("en")}
-            style={styles.language_button}
-            buttonColor={selectedLanguage === "en" ? "#09C849" : "#FFFFFF"}
-            textColor={selectedLanguage === "en" ? "#FFFFFF" : "#1E7FC1"}
-          >
-            🇬🇧 English
-          </Button>
-
-          <Button
-            mode="contained"
-            onPress={() => setSelectedLanguage("fr")}
-            style={styles.language_button}
-            buttonColor={selectedLanguage === "fr" ? "#09C849" : "#FFFFFF"}
-            textColor={selectedLanguage === "fr" ? "#FFFFFF" : "#1E7FC1"}
-          >
-            🇫🇷 Français
-          </Button>
+          {languages.map((lang) => {
+            const isSelected = selectedLanguage === lang.code;
+            return (
+              <TouchableOpacity
+                key={lang.code}
+                onPress={() => setSelectedLanguage(lang.code)}
+                style={[
+                  styles.language_row,
+                  isSelected && styles.language_row_selected,
+                ]}
+                activeOpacity={0.75}
+              >
+                <Text style={styles.flag}>{lang.flag}</Text>
+                <Text
+                  style={[
+                    styles.language_name,
+                    isSelected && styles.language_name_selected,
+                  ]}
+                >
+                  {lang.nativeName}
+                </Text>
+                <View
+                  style={[
+                    styles.language_badge,
+                    isSelected && styles.language_badge_selected,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.language_badge_text,
+                      isSelected && styles.language_badge_text_selected,
+                    ]}
+                  >
+                    {lang.label}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         <View style={styles.save_section}>
@@ -97,6 +108,8 @@ export default function Language() {
             mode="contained"
             onPress={saveLanguage}
             style={styles.save_button}
+            contentStyle={styles.save_button_content}
+            labelStyle={styles.save_button_label}
             buttonColor="#2196F3"
             textColor="#FFFFFF"
             disabled={!selectedLanguage || isLoading}
@@ -119,55 +132,135 @@ const styles = StyleSheet.create({
   content_container: {
     flex: 1,
     backgroundColor: "#f0f0f0",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingTop: 30,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: 28,
     paddingHorizontal: 20,
     marginHorizontal: 10,
     marginBottom: -30,
     justifyContent: "space-between",
   },
+
+  // --- Title section ---
   title_section: {
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 24,
   },
-  page_title: {
-    fontSize: 24,
+  title_divider_row: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    gap: 10,
+  },
+  title_line: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#DDDDDD",
+  },
+  title_text_block: {
+    alignItems: "center",
+    gap: 3,
+    paddingHorizontal: 4,
+  },
+  title_arabic: {
+    fontSize: 12,
+    color: "#AAAAAA",
+    letterSpacing: 0.8,
+  },
+  title_main: {
+    fontSize: 15,
     fontWeight: "700",
-    color: "#333333",
-    marginBottom: 8,
+    color: "#2D2D2D",
+    letterSpacing: 0.1,
   },
-  page_subtitle: {
-    fontSize: 14,
-    color: "#666666",
+  title_sub: {
+    fontSize: 13,
+    fontWeight: "400",
+    color: "#999999",
+    letterSpacing: 0.1,
   },
+
+  // --- Language rows ---
   buttons_section: {
     flex: 1,
-    gap: 15,
+    gap: 14,
     alignItems: "center",
-    paddingTop: 10,
+    paddingTop: 4,
   },
-  language_button: {
+  language_row: {
+    flexDirection: "row",
+    alignItems: "center",
     width: "100%",
-    maxWidth: 320,
-    height: 55,
-    justifyContent: "center",
-    borderRadius: 12,
-    elevation: 2,
+    maxWidth: 340,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    borderWidth: 2,
+    borderColor: "transparent",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
+    shadowOpacity: 0.07,
+    shadowRadius: 4,
+    elevation: 2,
   },
+  language_row_selected: {
+    borderColor: "#09C849",
+    backgroundColor: "#F4FFF8",
+  },
+  flag: {
+    fontSize: 26,
+    marginRight: 14,
+  },
+  language_name: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1A1A2E",
+  },
+  language_name_selected: {
+    color: "#09C849",
+  },
+  language_badge: {
+    backgroundColor: "#F0F0F0",
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 20,
+  },
+  language_badge_selected: {
+    backgroundColor: "#E0F9E8",
+  },
+  language_badge_text: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#888888",
+  },
+  language_badge_text_selected: {
+    color: "#09C849",
+    fontWeight: "600",
+  },
+
+  // --- Save button ---
   save_section: {
     paddingBottom: 30,
     alignItems: "center",
   },
   save_button: {
     width: "100%",
-    maxWidth: 320,
-    height: 50,
-    justifyContent: "center",
-    borderRadius: 12,
+    maxWidth: 330,
+    borderRadius: 16,
+    shadowColor: "#2196F3",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  save_button_content: {
+    height: 54,
+  },
+  save_button_label: {
+    fontSize: 14,
+    fontWeight: "700",
+    letterSpacing: 0.4,
   },
 });

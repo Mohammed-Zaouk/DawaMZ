@@ -7,6 +7,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function About() {
   const { language } = useLanguage();
 
+  const isRTL = language === "ar";
+  const rtlStyle = {
+    writingDirection: isRTL ? "rtl" : "ltr",
+    textAlign: isRTL ? "right" : "left",
+  } as const;
+
   const getText = () => {
     const currentYear = new Date().getFullYear();
     if (language === "ar") {
@@ -107,6 +113,15 @@ export default function About() {
 
   const text = getText();
 
+  const features = [
+    text.feature1,
+    text.feature2,
+    text.feature3,
+    text.feature4,
+    text.feature5,
+    text.feature6,
+  ];
+
   return (
     <SafeAreaView style={styles.screen_container}>
       <BackgroundBubbles />
@@ -126,25 +141,40 @@ export default function About() {
             <Text style={styles.version}>{text.version}</Text>
           </View>
 
-          <Text style={styles.section_title}>{text.aboutTitle}</Text>
-          <Text style={styles.section_content}>{text.aboutContent}</Text>
+          <Text style={[styles.section_title, rtlStyle]}>
+            {text.aboutTitle}
+          </Text>
+          <Text style={[styles.section_content, rtlStyle]}>
+            {text.aboutContent}
+          </Text>
 
-          <Text style={styles.section_title}>{text.featuresTitle}</Text>
-          <Text style={styles.feature}>• {text.feature1}</Text>
-          <Text style={styles.feature}>• {text.feature2}</Text>
-          <Text style={styles.feature}>• {text.feature3}</Text>
-          <Text style={styles.feature}>• {text.feature4}</Text>
-          <Text style={styles.feature}>• {text.feature5}</Text>
-          <Text style={styles.feature}>• {text.feature6}</Text>
+          <Text style={[styles.section_title, rtlStyle]}>
+            {text.featuresTitle}
+          </Text>
+          <View style={styles.features_container}>
+            {features.map((feature, index) => (
+              <Text key={index} style={[styles.feature, rtlStyle]}>
+                • {feature}
+              </Text>
+            ))}
+          </View>
 
-          <Text style={styles.section_title}>{text.missionTitle}</Text>
-          <Text style={styles.section_content}>{text.missionContent}</Text>
+          <Text style={[styles.section_title, rtlStyle]}>
+            {text.missionTitle}
+          </Text>
+          <Text style={[styles.section_content, rtlStyle]}>
+            {text.missionContent}
+          </Text>
 
-          <Text style={styles.section_title}>{text.freeTitle}</Text>
-          <Text style={styles.section_content}>{text.freeContent}</Text>
+          <Text style={[styles.section_title, rtlStyle]}>{text.freeTitle}</Text>
+          <Text style={[styles.section_content, rtlStyle]}>
+            {text.freeContent}
+          </Text>
 
-          <Text style={styles.section_title}>{text.dataTitle}</Text>
-          <Text style={styles.section_content}>{text.dataContent}</Text>
+          <Text style={[styles.section_title, rtlStyle]}>{text.dataTitle}</Text>
+          <Text style={[styles.section_content, rtlStyle]}>
+            {text.dataContent}
+          </Text>
 
           <Text style={styles.copyright}>{text.copyright}</Text>
 
@@ -163,15 +193,20 @@ const styles = StyleSheet.create({
   },
   content_container: {
     flex: 1,
-    backgroundColor: "#f0f0f0",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: "#f5f6fa",
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     paddingTop: 20,
     marginHorizontal: 10,
     marginBottom: -30,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 8,
   },
   scroll_content: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 22,
   },
   logo_section: {
     alignItems: "center",
@@ -190,31 +225,55 @@ const styles = StyleSheet.create({
   },
   version: {
     fontSize: 14,
-    color: "#999",
+    color: "#aab0be",
+    fontWeight: "500",
+    letterSpacing: 0.2,
   },
   section_title: {
-    fontSize: 18,
-    fontWeight: "600",
+    fontSize: 14,
+    fontWeight: "700",
     color: "#2196F3",
-    marginTop: 20,
-    marginBottom: 10,
+    marginTop: 10,
+    marginBottom: 8,
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
   },
   section_content: {
     fontSize: 14,
-    color: "#666",
-    lineHeight: 21,
+    color: "#5a6478",
+    lineHeight: 22,
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  features_container: {
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
   feature: {
     fontSize: 14,
-    color: "#666",
+    color: "#5a6478",
     lineHeight: 24,
-    paddingLeft: 10,
   },
   copyright: {
     fontSize: 12,
-    color: "#999",
+    color: "#aab0be",
     textAlign: "center",
     marginTop: 30,
+    fontWeight: "500",
   },
   footer_spacing: {
     height: 40,

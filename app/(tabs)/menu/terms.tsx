@@ -7,6 +7,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function Terms() {
   const { language } = useLanguage();
 
+  const isRTL = language === "ar";
+  const rtlStyle = {
+    writingDirection: isRTL ? "rtl" : "ltr",
+    textAlign: isRTL ? "right" : "left",
+  } as const;
+
   const getText = () => {
     if (language === "ar") {
       return {
@@ -139,6 +145,18 @@ export default function Terms() {
 
   const text = getText();
 
+  const sections = [
+    { title: text.section1Title, content: text.section1Content },
+    { title: text.section2Title, content: text.section2Content },
+    { title: text.section3Title, content: text.section3Content },
+    { title: text.section4Title, content: text.section4Content },
+    { title: text.section5Title, content: text.section5Content },
+    { title: text.section6Title, content: text.section6Content },
+    { title: text.section7Title, content: text.section7Content },
+    { title: text.section8Title, content: text.section8Content },
+    { title: text.section9Title, content: text.section9Content },
+  ];
+
   return (
     <SafeAreaView style={styles.screen_container}>
       <BackgroundBubbles />
@@ -149,37 +167,31 @@ export default function Terms() {
           style={styles.scroll_content}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.title}>{text.title}</Text>
-          <Text style={styles.last_updated}>{text.lastUpdated}</Text>
+          <Text style={[styles.title, rtlStyle]}>{text.title}</Text>
+          <Text style={[styles.last_updated, rtlStyle]}>
+            {text.lastUpdated}
+          </Text>
 
-          <Text style={styles.intro}>{text.intro}</Text>
+          <Text
+            style={[
+              styles.intro,
+              rtlStyle,
+              isRTL ? styles.intro_rtl : styles.intro_ltr,
+            ]}
+          >
+            {text.intro}
+          </Text>
 
-          <Text style={styles.section_title}>{text.section1Title}</Text>
-          <Text style={styles.section_content}>{text.section1Content}</Text>
-
-          <Text style={styles.section_title}>{text.section2Title}</Text>
-          <Text style={styles.section_content}>{text.section2Content}</Text>
-
-          <Text style={styles.section_title}>{text.section3Title}</Text>
-          <Text style={styles.section_content}>{text.section3Content}</Text>
-
-          <Text style={styles.section_title}>{text.section4Title}</Text>
-          <Text style={styles.section_content}>{text.section4Content}</Text>
-
-          <Text style={styles.section_title}>{text.section5Title}</Text>
-          <Text style={styles.section_content}>{text.section5Content}</Text>
-
-          <Text style={styles.section_title}>{text.section6Title}</Text>
-          <Text style={styles.section_content}>{text.section6Content}</Text>
-
-          <Text style={styles.section_title}>{text.section7Title}</Text>
-          <Text style={styles.section_content}>{text.section7Content}</Text>
-
-          <Text style={styles.section_title}>{text.section8Title}</Text>
-          <Text style={styles.section_content}>{text.section8Content}</Text>
-
-          <Text style={styles.section_title}>{text.section9Title}</Text>
-          <Text style={styles.section_content}>{text.section9Content}</Text>
+          {sections.map((section, index) => (
+            <View key={index}>
+              <Text style={[styles.section_title, rtlStyle]}>
+                {section.title}
+              </Text>
+              <Text style={[styles.section_content, rtlStyle]}>
+                {section.content}
+              </Text>
+            </View>
+          ))}
 
           <View style={styles.footer_spacing} />
         </ScrollView>
@@ -196,44 +208,76 @@ const styles = StyleSheet.create({
   },
   content_container: {
     flex: 1,
-    backgroundColor: "#f0f0f0",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: "#f5f6fa",
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     paddingTop: 20,
     marginHorizontal: 10,
     marginBottom: -30,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 8,
   },
   scroll_content: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 22,
   },
   title: {
-    fontSize: 26,
-    fontWeight: "bold",
-    color: "#2196F3",
-    marginBottom: 8,
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#1a1a2e",
+    letterSpacing: -0.5,
   },
   last_updated: {
     fontSize: 12,
-    color: "#999",
+    color: "#aab0be",
     marginBottom: 20,
+    fontWeight: "500",
+    letterSpacing: 0.2,
   },
   intro: {
     fontSize: 15,
-    color: "#333",
-    lineHeight: 22,
-    marginBottom: 20,
+    color: "#4a5568",
+    lineHeight: 24,
+    marginBottom: 10,
+    backgroundColor: "#eaf3ff",
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  intro_ltr: {
+    borderLeftWidth: 3,
+    borderLeftColor: "#2196F3",
+    borderRightWidth: 0,
+  },
+  intro_rtl: {
+    borderRightWidth: 3,
+    borderRightColor: "#2196F3",
+    borderLeftWidth: 0,
   },
   section_title: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-    marginTop: 20,
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#2196F3",
+    marginTop: 10,
     marginBottom: 8,
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
   },
   section_content: {
     fontSize: 14,
-    color: "#666",
-    lineHeight: 21,
+    color: "#5a6478",
+    lineHeight: 22,
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
   footer_spacing: {
     height: 40,

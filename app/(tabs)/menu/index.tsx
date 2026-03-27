@@ -1,6 +1,7 @@
 import BackgroundBubbles from "@/components/background_bubbles";
 import Header from "@/components/header";
 import { useLanguage } from "@/context/LanguageContext";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
@@ -73,22 +74,30 @@ export default function Menu() {
     <SafeAreaView style={styles.screen_container}>
       <BackgroundBubbles />
       <Header />
-      <ScrollView style={styles.content_container}>
+      <ScrollView
+        style={styles.content_container}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Settings Section */}
         <View style={styles.section}>
-          <Text style={styles.section_header}>{text.settings} ⚙️</Text>
+          <View style={styles.section_header_row}>
+            <Ionicons name="settings-outline" size={15} color="#2196F3" />
+            <Text style={styles.section_header}>{text.settings}</Text>
+          </View>
           <View style={styles.section_card}>
             <List.Item
               title={text.language}
               description={text.currentLang}
-              left={(props) => (
+              titleStyle={styles.item_title}
+              descriptionStyle={styles.item_description}
+              left={() => (
                 <View style={styles.icon_wrapper}>
-                  <List.Icon {...props} icon="translate" color="#2196F3" />
+                  <Ionicons name="language" size={22} color="#2196F3" />
                 </View>
               )}
-              right={(props) => (
+              right={() => (
                 <View style={styles.icon_wrapper}>
-                  <List.Icon {...props} icon="chevron-right" color="#999" />
+                  <Ionicons name="chevron-forward" size={20} color="#999" />
                 </View>
               )}
               onPress={() => router.push("/(tabs)/menu/language")}
@@ -97,13 +106,12 @@ export default function Menu() {
             <Divider style={styles.item_divider} />
             <List.Item
               title={themeMode ? text.darkMode : text.lightMode}
-              left={(props) => (
+              titleStyle={styles.item_title}
+              left={() => (
                 <View style={styles.icon_wrapper}>
-                  <List.Icon
-                    {...props}
-                    icon={
-                      themeMode ? "moon-waning-crescent" : "white-balance-sunny"
-                    }
+                  <Ionicons
+                    name={themeMode ? "moon-outline" : "sunny-outline"}
+                    size={22}
                     color="#2196F3"
                   />
                 </View>
@@ -124,18 +132,26 @@ export default function Menu() {
 
         {/* Legal Section */}
         <View style={styles.section}>
-          <Text style={styles.section_header}>{text.legal} ⚖️</Text>
+          <View style={styles.section_header_row}>
+            <Ionicons name="scale-outline" size={15} color="#2196F3" />
+            <Text style={styles.section_header}>{text.legal}</Text>
+          </View>
           <View style={styles.section_card}>
             <List.Item
               title={text.privacy}
-              left={(props) => (
+              titleStyle={styles.item_title}
+              left={() => (
                 <View style={styles.icon_wrapper}>
-                  <List.Icon {...props} icon="shield-account" color="#2196F3" />
+                  <Ionicons
+                    name="shield-checkmark-outline"
+                    size={22}
+                    color="#2196F3"
+                  />
                 </View>
               )}
-              right={(props) => (
+              right={() => (
                 <View style={styles.icon_wrapper}>
-                  <List.Icon {...props} icon="chevron-right" color="#999" />
+                  <Ionicons name="chevron-forward" size={20} color="#999" />
                 </View>
               )}
               onPress={() => router.push("/(tabs)/menu/privacy")}
@@ -144,14 +160,19 @@ export default function Menu() {
             <Divider style={styles.item_divider} />
             <List.Item
               title={text.terms}
-              left={(props) => (
+              titleStyle={styles.item_title}
+              left={() => (
                 <View style={styles.icon_wrapper}>
-                  <List.Icon {...props} icon="file-document" color="#2196F3" />
+                  <Ionicons
+                    name="document-text-outline"
+                    size={22}
+                    color="#2196F3"
+                  />
                 </View>
               )}
-              right={(props) => (
+              right={() => (
                 <View style={styles.icon_wrapper}>
-                  <List.Icon {...props} icon="chevron-right" color="#999" />
+                  <Ionicons name="chevron-forward" size={20} color="#999" />
                 </View>
               )}
               onPress={() => router.push("/(tabs)/menu/terms")}
@@ -162,18 +183,30 @@ export default function Menu() {
 
         {/* About Section */}
         <View style={styles.section}>
-          <Text style={styles.section_header}>{text.about} ℹ️</Text>
+          <View style={styles.section_header_row}>
+            <Ionicons
+              name="information-circle-outline"
+              size={15}
+              color="#2196F3"
+            />
+            <Text style={styles.section_header}>{text.about}</Text>
+          </View>
           <View style={styles.section_card}>
             <List.Item
               title={text.aboutApp}
-              left={(props) => (
+              titleStyle={styles.item_title}
+              left={() => (
                 <View style={styles.icon_wrapper}>
-                  <List.Icon {...props} icon="information" color="#2196F3" />
+                  <Ionicons
+                    name="information-circle-outline"
+                    size={22}
+                    color="#2196F3"
+                  />
                 </View>
               )}
-              right={(props) => (
+              right={() => (
                 <View style={styles.icon_wrapper}>
-                  <List.Icon {...props} icon="chevron-right" color="#999" />
+                  <Ionicons name="chevron-forward" size={20} color="#999" />
                 </View>
               )}
               onPress={() => router.push("/(tabs)/menu/about")}
@@ -182,14 +215,15 @@ export default function Menu() {
             <Divider style={styles.item_divider} />
             <List.Item
               title={text.rate}
-              left={(props) => (
+              titleStyle={styles.item_title}
+              left={() => (
                 <View style={styles.icon_wrapper}>
-                  <List.Icon {...props} icon="star" color="#2196F3" />
+                  <Ionicons name="star-outline" size={22} color="#2196F3" />
                 </View>
               )}
-              right={(props) => (
+              right={() => (
                 <View style={styles.icon_wrapper}>
-                  <List.Icon {...props} icon="chevron-right" color="#999" />
+                  <Ionicons name="chevron-forward" size={20} color="#999" />
                 </View>
               )}
               onPress={() => router.push("/menu")}
@@ -198,14 +232,19 @@ export default function Menu() {
             <Divider style={styles.item_divider} />
             <List.Item
               title={text.share}
-              left={(props) => (
+              titleStyle={styles.item_title}
+              left={() => (
                 <View style={styles.icon_wrapper}>
-                  <List.Icon {...props} icon="share-variant" color="#2196F3" />
+                  <Ionicons
+                    name="share-social-outline"
+                    size={22}
+                    color="#2196F3"
+                  />
                 </View>
               )}
-              right={(props) => (
+              right={() => (
                 <View style={styles.icon_wrapper}>
-                  <List.Icon {...props} icon="chevron-right" color="#999" />
+                  <Ionicons name="chevron-forward" size={20} color="#999" />
                 </View>
               )}
               onPress={() => router.push("/menu")}
@@ -215,11 +254,13 @@ export default function Menu() {
             <List.Item
               title={text.version}
               description="1.0.0"
-              left={(props) => (
+              titleStyle={styles.item_title}
+              descriptionStyle={styles.item_description}
+              left={() => (
                 <View style={styles.icon_wrapper}>
-                  <List.Icon
-                    {...props}
-                    icon="information-outline"
+                  <Ionicons
+                    name="information-circle-outline"
+                    size={22}
                     color="#2196F3"
                   />
                 </View>
@@ -243,7 +284,7 @@ const styles = StyleSheet.create({
   },
   content_container: {
     flex: 1,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "#f5f6fa",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingTop: 20,
@@ -254,15 +295,41 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingHorizontal: 16,
   },
-  section_header: {
+  section_header_row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
     marginBottom: 10,
   },
+  section_header: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#2196F3",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
   section_card: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#ffffff",
     borderRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+    overflow: "hidden",
   },
   list_item: {
-    // Add your styles
+    paddingLeft: 15,
+  },
+  item_title: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#1a1a2e",
+  },
+  item_description: {
+    fontSize: 12,
+    color: "#aab0be",
+    fontWeight: "500",
   },
   icon_wrapper: {
     justifyContent: "center",
@@ -273,7 +340,7 @@ const styles = StyleSheet.create({
     // Add your styles
   },
   item_divider: {
-    // Add your styles
+    marginHorizontal: 20,
   },
   footer_spacing: {
     height: 40,
