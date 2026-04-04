@@ -1,5 +1,6 @@
 import BackgroundBubbles from "@/components/background_bubbles";
 import Divider from "@/components/divider_line";
+import Loading from "@/components/loading";
 import { PulseDot } from "@/components/pulse_dot";
 import { useLanguage } from "@/context/LanguageContext";
 import { supabase } from "@/utils/supabase";
@@ -7,13 +8,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   FlatList,
   Image,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { Button, Searchbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -95,12 +95,7 @@ export default function CitiesPage() {
   const text = getText();
 
   if (loading) {
-    return (
-      <SafeAreaView style={[styles.screen_container, styles.loading_container]}>
-        <BackgroundBubbles />
-        <ActivityIndicator size="large" color="#ffffff" />
-      </SafeAreaView>
-    );
+    return <Loading />;
   }
 
   return (
@@ -261,10 +256,6 @@ const styles = StyleSheet.create({
     gap: 20,
     paddingHorizontal: 10,
     paddingTop: 15,
-  },
-  loading_container: {
-    alignItems: "center",
-    justifyContent: "center",
   },
   search_bar: {
     backgroundColor: "#FFFFFF",

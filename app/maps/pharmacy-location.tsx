@@ -1,3 +1,4 @@
+import Loading from "@/components/loading";
 import { PulseDot } from "@/components/pulse_dot";
 import { useLanguage } from "@/context/LanguageContext";
 import { formatDistance } from "@/utils/location/calculateDistance";
@@ -8,12 +9,11 @@ import * as Clipboard from "expo-clipboard";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Linking,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import MapView, { Marker, Region } from "react-native-maps";
 import { Button, Snackbar } from "react-native-paper";
@@ -162,11 +162,7 @@ export default function PharmacyMap() {
   };
 
   if (loading) {
-    return (
-      <SafeAreaView style={[styles.container, styles.loading_container]}>
-        <ActivityIndicator size="large" color="#1A73E8" />
-      </SafeAreaView>
-    );
+    return <Loading />;
   }
 
   return (
@@ -355,11 +351,6 @@ const styles = StyleSheet.create({
     flex: 1,
     marginBottom: -25,
     backgroundColor: "#FFFFFF",
-  },
-  //loading
-  loading_container: {
-    alignItems: "center",
-    justifyContent: "center",
   },
   // Header
   header: {

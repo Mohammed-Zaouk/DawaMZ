@@ -43,7 +43,8 @@ export default function Index() {
         manualSubtitle: "البحث حسب المنطقة/المدينة",
         autoBadge: "Auto",
         alertTitle: "الموقع مطلوب",
-        alertMessage: "يرجى تفعيل صلاحيات الموقع لاستخدام البحث التلقائي.",
+        alertMessage:
+          "يرجى اعطاء صلاحيات الوصول للموقع لاستخدام البحث التلقائي.",
         alertButton: "حسناً",
       };
     } else if (language === "fr") {
@@ -57,7 +58,7 @@ export default function Index() {
         autoBadge: "Auto",
         alertTitle: "Localisation requise",
         alertMessage:
-          "Veuillez activer les permissions de localisation pour utiliser la recherche automatique.",
+          "Veuillez donner les permissions d'accès à la localisation pour utiliser la recherche automatique.",
         alertButton: "OK",
       };
     } else {
@@ -70,7 +71,8 @@ export default function Index() {
         manualSubtitle: "Search by region/city",
         autoBadge: "Auto",
         alertTitle: "Location Required",
-        alertMessage: "Please enable location permissions to use auto search.",
+        alertMessage:
+          "Please grant location access permissions to use automatic search.",
         alertButton: "OK",
       };
     }

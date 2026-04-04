@@ -1,5 +1,6 @@
 import BackgroundBubbles from "@/components/background_bubbles";
 import Divider from "@/components/divider_line";
+import Loading from "@/components/loading";
 import { PulseDot } from "@/components/pulse_dot";
 import { useLanguage } from "@/context/LanguageContext";
 import {
@@ -12,7 +13,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   FlatList,
   ScrollView,
@@ -119,7 +119,7 @@ export default function PharmaciesPage() {
         filterNight: "ليلية",
         filterOnCall: "في الخدمة",
         distance: "المسافة",
-        locationPermission: "يرجى تفعيل الموقع لعرض المسافة",
+        locationPermission: "يرجى اعطاء صلاحيات الوصول للموقع لعرض المسافة",
         search: "ابحث عن صيدلية...",
         noResults: "لا توجد صيدليات مطابقة",
         noResultsSub: "متأكد من الاسم؟ اقترحها لإضافتها.",
@@ -142,7 +142,7 @@ export default function PharmaciesPage() {
         filterOnCall: "De garde",
         distance: "Distance",
         locationPermission:
-          "Veuillez activer la localisation pour voir la distance",
+          "Veuillez autoriser l'accès à la localisation pour voir la distance",
         search: "Rechercher une pharmacie...",
         noResults: "Aucune pharmacie trouvée",
         noResultsSub: "Vous êtes sûr du nom ? Suggérez-la pour l'ajouter.",
@@ -167,7 +167,7 @@ export default function PharmaciesPage() {
         filterNight: "Night",
         filterOnCall: "On Call",
         distance: "Distance",
-        locationPermission: "Please enable location to see distance",
+        locationPermission: "Please allow location access to see the distance",
         search: "Search pharmacies...",
         noResults: "No pharmacies found",
         noResultsSub: "Sure of the name? Tap below to suggest adding it.",
@@ -198,12 +198,7 @@ export default function PharmaciesPage() {
   );
 
   if (loading) {
-    return (
-      <SafeAreaView style={[styles.screen_container, styles.loading_container]}>
-        <BackgroundBubbles />
-        <ActivityIndicator size="large" color="#ffffff" />
-      </SafeAreaView>
-    );
+    return <Loading />;
   }
 
   return (
@@ -535,10 +530,6 @@ const styles = StyleSheet.create({
     gap: 15,
     paddingHorizontal: 10,
     paddingTop: 15,
-  },
-  loading_container: {
-    alignItems: "center",
-    justifyContent: "center",
   },
   search_bar: {
     backgroundColor: "#FFFFFF",

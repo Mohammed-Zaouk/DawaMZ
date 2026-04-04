@@ -1,17 +1,25 @@
 import BackgroundBubbles from "@/components/background_bubbles";
 import Divider from "@/components/divider_line";
+import Loading from "@/components/loading";
 import { useLanguage } from "@/context/LanguageContext";
 import { supabase } from "@/utils/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { FlatList, Image, StyleSheet, Text, View } from "react-native";
+import {
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  View
+} from "react-native";
 import { Button, Searchbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SearchIndex() {
   const [searchRegion, setSearchRegion] = useState("");
   const [regions, setRegions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const { language } = useLanguage();
 
   const getText = () => {
@@ -41,6 +49,7 @@ export default function SearchIndex() {
 
   useEffect(() => {
     const fetchRegions = async () => {
+      setLoading(true);
       const { data, error } = await supabase
         .from("regions")
         .select(`*, cities (name, name_ar)`);
@@ -51,6 +60,7 @@ export default function SearchIndex() {
       }
 
       setRegions(data ?? []);
+      setLoading(false);
     };
 
     fetchRegions();
@@ -73,6 +83,10 @@ export default function SearchIndex() {
 
     return matchesName || matchesNameAr || matchesCities || matchesCitiesAr;
   });
+
+  if (loading) {
+    return <Loading />;
+  }
 
   return (
     <SafeAreaView style={styles.screen_container}>
