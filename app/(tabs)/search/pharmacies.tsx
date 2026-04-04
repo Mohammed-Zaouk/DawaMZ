@@ -291,7 +291,6 @@ export default function PharmaciesPage() {
             id={item.id}
             nameAr={item.name_ar}
             name={item.name}
-            cityId={cityId as string}
             cityName={cityName as string}
             cityNameAr={cityNameAr as string}
             addressAr={item.address_ar}
@@ -380,7 +379,6 @@ function CardItem({
   id,
   nameAr,
   name,
-  cityId,
   cityName,
   cityNameAr,
   addressAr,
@@ -396,7 +394,6 @@ function CardItem({
   id: string;
   nameAr: string;
   name: string;
-  cityId: string;
   cityName: string;
   cityNameAr: string;
   addressAr: string;
