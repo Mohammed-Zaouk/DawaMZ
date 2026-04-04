@@ -2,16 +2,17 @@ import BackgroundBubbles from "@/components/background_bubbles";
 import Divider from "@/components/divider_line";
 import { PulseDot } from "@/components/pulse_dot";
 import { useLanguage } from "@/context/LanguageContext";
-import { pharmaciesByCity } from "@/data/pharmacies";
 import {
   calculateDistance,
   formatDistance,
 } from "@/utils/location/calculateDistance";
 import { getUserLocation } from "@/utils/location/getLocation";
+import { supabase } from "@/utils/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   FlatList,
   ScrollView,
@@ -23,23 +24,74 @@ import {
 import { Button, Searchbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+type TimeRange = { open: string; close: string };
+type DaySchedule = TimeRange[] | null;
+type Schedule = {
+  monday: DaySchedule;
+  tuesday: DaySchedule;
+  wednesday: DaySchedule;
+  thursday: DaySchedule;
+  friday: DaySchedule;
+  saturday: DaySchedule;
+  sunday: DaySchedule;
+};
+
+type Pharmacy = {
+  id: string;
+  name: string;
+  name_ar: string;
+  address: string;
+  address_ar: string;
+  phone: string;
+  latitude: number;
+  longitude: number;
+  open: boolean;
+  rating?: number;
+  is_night_pharmacy?: boolean;
+  is_on_call?: boolean;
+  duty_start: string;
+  duty_end: string;
+  schedule: Schedule | null;
+  distance?: number;
+};
+
 export default function PharmaciesPage() {
   const [searchParmacy, setSearchParmacy] = useState("");
   const { language } = useLanguage();
   const [activeFilter, setActiveFilter] = useState("all");
   const { cityId, cityName, cityNameAr } = useLocalSearchParams();
-  const pharmacies = pharmaciesByCity[cityId as string] || [];
-  const [pharmaciesWithDistance, setPharmaciesWithDistance] =
-    useState<((typeof pharmacies)[0] & { distance?: number })[]>(pharmacies);
+  const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [pharmaciesWithDistance, setPharmaciesWithDistance] = useState<
+    Pharmacy[]
+  >([]);
 
   useEffect(() => {
-    calcDistance();
+    fetchPharmacies();
   }, []);
 
-  const calcDistance = async () => {
+  const fetchPharmacies = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("pharmacies")
+      .select("*")
+      .eq("city_id", cityId);
+
+    if (error) {
+      console.error("Failed to fetch pharmacies:", error.message);
+      setLoading(false);
+      return;
+    }
+
+    setPharmacies(data ?? []);
+    await calcDistance(data ?? []);
+    setLoading(false);
+  };
+
+  const calcDistance = async (data: Pharmacy[]) => {
     const loc = await getUserLocation();
     if (loc) {
-      const updated = pharmacies
+      const updated = data
         .map((pharmacy) => ({
           ...pharmacy,
           distance: calculateDistance(
@@ -49,8 +101,10 @@ export default function PharmaciesPage() {
             pharmacy.longitude,
           ),
         }))
-        .sort((a, b) => a.distance - b.distance);
+        .sort((a, b) => (a.distance ?? 0) - (b.distance ?? 0));
       setPharmaciesWithDistance(updated);
+    } else {
+      setPharmaciesWithDistance(data);
     }
   };
 
@@ -132,16 +186,25 @@ export default function PharmaciesPage() {
   const text = getText();
 
   const filteredPharmacies = pharmaciesWithDistance.filter((pharmacy) => {
-    if (activeFilter === "night") return pharmacy.isNightPharmacy === true;
-    else if (activeFilter === "oncall") return pharmacy.isOnCall === true;
+    if (activeFilter === "night") return pharmacy.is_night_pharmacy === true;
+    else if (activeFilter === "oncall") return pharmacy.is_on_call === true;
     return pharmacy.open === true;
   });
 
   const filterData = filteredPharmacies.filter(
     (pharmacy) =>
       pharmacy.name.toLowerCase().includes(searchParmacy.toLowerCase()) ||
-      pharmacy.nameAr.includes(searchParmacy),
+      pharmacy.name_ar.includes(searchParmacy),
   );
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.screen_container, styles.loading_container]}>
+        <BackgroundBubbles />
+        <ActivityIndicator size="large" color="#ffffff" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.screen_container}>
@@ -226,17 +289,17 @@ export default function PharmaciesPage() {
         renderItem={({ item }) => (
           <CardItem
             id={item.id}
-            nameAr={item.nameAr}
+            nameAr={item.name_ar}
             name={item.name}
             cityId={cityId as string}
             cityName={cityName as string}
             cityNameAr={cityNameAr as string}
-            addressAr={item.addressAr}
+            addressAr={item.address_ar}
             address={item.address}
             phone={item.phone}
             open={item.open}
-            dutyStart={item.dutyStart}
-            dutyEnd={item.dutyEnd}
+            dutyStart={item.duty_start}
+            dutyEnd={item.duty_end}
             distance={item.distance}
             language={language}
             text={text}
@@ -450,7 +513,6 @@ function CardItem({
                 pathname: "/maps/pharmacy-location",
                 params: {
                   pharmacyId: id,
-                  cityId: cityId,
                   distance: distance,
                   cityName: cityName,
                   cityNameAr: cityNameAr,
@@ -476,6 +538,10 @@ const styles = StyleSheet.create({
     gap: 15,
     paddingHorizontal: 10,
     paddingTop: 15,
+  },
+  loading_container: {
+    alignItems: "center",
+    justifyContent: "center",
   },
   search_bar: {
     backgroundColor: "#FFFFFF",

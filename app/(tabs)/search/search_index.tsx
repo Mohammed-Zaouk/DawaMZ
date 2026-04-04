@@ -1,17 +1,19 @@
 import BackgroundBubbles from "@/components/background_bubbles";
 import Divider from "@/components/divider_line";
 import { useLanguage } from "@/context/LanguageContext";
-import { regions } from "@/data/regions";
+import { supabase } from "@/utils/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FlatList, Image, StyleSheet, Text, View } from "react-native";
 import { Button, Searchbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SearchIndex() {
   const [searchRegion, setSearchRegion] = useState("");
+  const [regions, setRegions] = useState<any[]>([]);
   const { language } = useLanguage();
+
   const getText = () => {
     if (language === "ar")
       return {
@@ -37,15 +39,40 @@ export default function SearchIndex() {
 
   const text = getText();
 
-  const filterData = regions.filter(
-    (region) =>
-      region.name
-        .toLocaleLowerCase()
-        .includes(searchRegion.toLocaleLowerCase()) ||
-      region.nameAr.includes(searchRegion) ||
-      region.cities.toLowerCase().includes(searchRegion.toLowerCase()) ||
-      region.citiesAr.includes(searchRegion),
-  );
+  useEffect(() => {
+    const fetchRegions = async () => {
+      const { data, error } = await supabase
+        .from("regions")
+        .select(`*, cities (name, name_ar)`);
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      setRegions(data ?? []);
+    };
+
+    fetchRegions();
+  }, []);
+
+  const filterData = regions.filter((region) => {
+    const search = searchRegion.toLowerCase();
+
+    const matchesName = region.name?.toLowerCase().includes(search);
+    const matchesNameAr = region.name_ar?.includes(searchRegion);
+
+    const citiesText = region.cities
+      ?.map((c: any) => c.name)
+      .join(" ")
+      .toLowerCase();
+    const citiesArText = region.cities?.map((c: any) => c.name_ar).join(" ");
+
+    const matchesCities = citiesText?.includes(search);
+    const matchesCitiesAr = citiesArText?.includes(searchRegion);
+
+    return matchesName || matchesNameAr || matchesCities || matchesCitiesAr;
+  });
 
   return (
     <SafeAreaView style={styles.screen_container}>
@@ -69,11 +96,10 @@ export default function SearchIndex() {
           <CardItem
             id={item.id}
             name={item.name}
-            nameAr={item.nameAr}
-            nameEn={item.nameEn}
+            name_ar={item.name_ar}
+            name_en={item.name_en}
             image={item.image}
             cities={item.cities}
-            citiesAr={item.citiesAr}
             language={language}
             text={text}
           />
@@ -117,31 +143,32 @@ function EmptyState({
 function CardItem({
   id,
   name,
-  nameAr,
-  nameEn,
+  name_ar,
+  name_en,
   image,
   cities,
-  citiesAr,
   language,
   text,
 }: {
   id: string;
   name: string;
-  nameAr: string;
-  nameEn: string;
-  image: any;
-  cities: string;
-  citiesAr: string;
+  name_ar: string;
+  name_en: string;
+  image: string;
+  cities: { name: string; name_ar: string }[];
   language: string | null;
   text: any;
 }) {
   const router = useRouter();
 
+  const citiesText = cities?.map((c) => c.name).join(" - ");
+  const citiesArText = cities?.map((c) => c.name_ar).join(" - ");
+
   return (
     <View style={styles.card}>
       <View style={styles.card_content}>
         <Text style={styles.card_title} numberOfLines={1} ellipsizeMode="tail">
-          {language === "ar" ? nameAr : language === "fr" ? name : nameEn}
+          {language === "ar" ? name_ar : language === "fr" ? name : name_en}
         </Text>
         <Divider style={styles.divider} />
         <Text
@@ -149,7 +176,7 @@ function CardItem({
           numberOfLines={1}
           ellipsizeMode="tail"
         >
-          {language === "ar" ? citiesAr : cities}
+          {language === "ar" ? citiesArText : citiesText}
         </Text>
         <View style={styles.button_container}>
           <Button
@@ -169,14 +196,17 @@ function CardItem({
         </View>
       </View>
       <View style={styles.image_container}>
-        <Image source={image} style={styles.card_image} resizeMode="cover" />
+        <Image
+          source={{ uri: image }}
+          style={styles.card_image}
+          resizeMode="cover"
+        />
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  // Screen
   screen_container: {
     flex: 1,
     backgroundColor: "#2196F3",
@@ -195,7 +225,6 @@ const styles = StyleSheet.create({
   list_container: {
     gap: 15,
   },
-  // Card
   card: {
     flexDirection: "row",
     justifyContent: "flex-end",
@@ -254,7 +283,6 @@ const styles = StyleSheet.create({
   card_button_content: {
     paddingVertical: 2,
   },
-  // Image
   image_container: {
     maxHeight: 110,
     maxWidth: 110,
@@ -263,7 +291,6 @@ const styles = StyleSheet.create({
     height: 110,
     width: 110,
   },
-  // Empty State
   empty_container: {
     alignItems: "center",
     justifyContent: "center",

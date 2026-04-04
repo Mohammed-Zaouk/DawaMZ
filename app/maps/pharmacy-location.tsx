@@ -1,13 +1,14 @@
 import { PulseDot } from "@/components/pulse_dot";
 import { useLanguage } from "@/context/LanguageContext";
-import { pharmaciesByCity } from "@/data/pharmacies";
 import { formatDistance } from "@/utils/location/calculateDistance";
 import { checkLocationPermission } from "@/utils/location/getLocation";
+import { supabase } from "@/utils/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Linking,
   StyleSheet,
   Text,
@@ -18,29 +19,59 @@ import MapView, { Marker, Region } from "react-native-maps";
 import { Button, Snackbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+type Pharmacy = {
+  id: string;
+  name: string;
+  name_ar: string;
+  address: string;
+  address_ar: string;
+  phone: string;
+  latitude: number;
+  longitude: number;
+  open: boolean;
+};
+
 export default function PharmacyMap() {
   const router = useRouter();
-  const { pharmacyId, cityId, distance, cityName, cityNameAr } =
-    useLocalSearchParams();
+  const { pharmacyId, distance, cityName, cityNameAr } = useLocalSearchParams();
 
   const { language } = useLanguage();
   const [check, setCheck] = useState<boolean>(true);
   const [snackbarVisible, setSnackbarVisible] = useState<boolean>(false);
-
-  const pharmacies = pharmaciesByCity[cityId as string];
-  const pharmacy = pharmacies.find((p) => p.id === pharmacyId);
+  const [loading, setLoading] = useState(true);
+  const [pharmacy, setPharmacy] = useState<Pharmacy | null>(null);
 
   const mapRef = useRef<MapView>(null);
   const [region, setRegion] = useState<Region>({
-    latitude: Number(pharmacy?.latitude),
-    longitude: Number(pharmacy?.longitude),
+    latitude: 0,
+    longitude: 0,
     latitudeDelta: 0.005,
     longitudeDelta: 0.005,
   });
 
   useEffect(() => {
+    fetchPharmacy();
     loadCheck();
   }, []);
+
+  const fetchPharmacy = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("pharmacies")
+      .select("*")
+      .eq("id", pharmacyId)
+      .single();
+    if (!error && data) {
+      setPharmacy(data);
+      setRegion({
+        latitude: data.latitude,
+        longitude: data.longitude,
+        latitudeDelta: 0.005,
+        longitudeDelta: 0.005,
+      });
+    }
+    setLoading(false);
+  };
 
   const loadCheck = async () => {
     const ch = await checkLocationPermission();
@@ -85,8 +116,8 @@ export default function PharmacyMap() {
   const getText = () => {
     if (language === "ar") {
       return {
-        title: pharmacy?.nameAr,
-        description: pharmacy?.addressAr,
+        title: pharmacy?.name_ar,
+        description: pharmacy?.address_ar,
         displayCityName: cityNameAr,
         directions: "الاتجاهات",
         call: "اتصال",
@@ -130,6 +161,14 @@ export default function PharmacyMap() {
     setSnackbarVisible(true);
   };
 
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, styles.loading_container]}>
+        <ActivityIndicator size="large" color="#1A73E8" />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -166,12 +205,7 @@ export default function PharmacyMap() {
         <MapView
           ref={mapRef}
           style={styles.map}
-          initialRegion={{
-            latitude: Number(pharmacy?.latitude),
-            longitude: Number(pharmacy?.longitude),
-            latitudeDelta: 0.005,
-            longitudeDelta: 0.005,
-          }}
+          initialRegion={region}
           onRegionChangeComplete={(r) => setRegion(r)}
           mapType="standard"
           zoomEnabled={true}
@@ -189,8 +223,8 @@ export default function PharmacyMap() {
               latitude: Number(pharmacy?.latitude),
               longitude: Number(pharmacy?.longitude),
             }}
-            title={text.title}
-            description={text.description}
+            title={text.title as string}
+            description={text.description as string}
             pinColor={pharmacy?.open ? "#09C849" : "#EF4444"}
           />
         </MapView>
@@ -322,7 +356,11 @@ const styles = StyleSheet.create({
     marginBottom: -25,
     backgroundColor: "#FFFFFF",
   },
-
+  //loading
+  loading_container: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
   // Header
   header: {
     height: 62,

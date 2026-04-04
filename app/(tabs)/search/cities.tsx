@@ -2,12 +2,12 @@ import BackgroundBubbles from "@/components/background_bubbles";
 import Divider from "@/components/divider_line";
 import { PulseDot } from "@/components/pulse_dot";
 import { useLanguage } from "@/context/LanguageContext";
-import { citiesByRegion } from "@/data/cities";
-import { pharmaciesByCity } from "@/data/pharmacies";
+import { supabase } from "@/utils/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   Image,
   StyleSheet,
@@ -18,15 +18,38 @@ import {
 import { Button, Searchbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+type City = {
+  id: string;
+  name: string;
+  name_ar: string;
+  image: string;
+  pharmacies: { open: boolean }[];
+};
+
 export default function CitiesPage() {
   const [searchCity, setSearchCity] = useState("");
+  const [cities, setCities] = useState<City[]>([]);
+  const [loading, setLoading] = useState(true);
   const { language } = useLanguage();
   const { regionId } = useLocalSearchParams();
-  const cities = citiesByRegion[regionId as string] || [];
+
+  useEffect(() => {
+    const fetchCities = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("cities")
+        .select("*, pharmacies(open)")
+        .eq("region_id", regionId);
+      if (!error) setCities(data || []);
+      setLoading(false);
+    };
+    fetchCities();
+  }, [regionId]);
+
   const filterData = cities.filter(
     (city) =>
       city.name.toLowerCase().includes(searchCity.toLowerCase()) ||
-      city.nameAr.includes(searchCity),
+      city.name_ar.includes(searchCity),
   );
 
   const getText = () => {
@@ -71,6 +94,15 @@ export default function CitiesPage() {
 
   const text = getText();
 
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.screen_container, styles.loading_container]}>
+        <BackgroundBubbles />
+        <ActivityIndicator size="large" color="#ffffff" />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.screen_container}>
       <BackgroundBubbles />
@@ -89,9 +121,11 @@ export default function CitiesPage() {
         renderItem={({ item }) => (
           <CardItem
             id={item.id}
-            nameAr={item.nameAr}
+            nameAr={item.name_ar}
             name={item.name}
-            image={item.image}
+            image={{ uri: item.image }}
+            allPharmacies={item.pharmacies.length}
+            openPharmacies={item.pharmacies.filter((p) => p.open).length}
             language={language}
             text={text}
           />
@@ -143,6 +177,8 @@ function CardItem({
   image,
   nameAr,
   name,
+  allPharmacies,
+  openPharmacies,
   language,
   text,
 }: {
@@ -150,15 +186,12 @@ function CardItem({
   nameAr: string;
   name: string;
   image: any;
+  allPharmacies: number;
+  openPharmacies: number;
   language: string | null;
   text: any;
 }) {
   const router = useRouter();
-  const cityPharmacies = pharmaciesByCity[id] || [];
-  const allPharmacies = cityPharmacies.length;
-  const openPharmacies = cityPharmacies.filter(
-    (pharmacy) => pharmacy.open,
-  ).length;
 
   return (
     <View style={styles.card}>
@@ -228,6 +261,10 @@ const styles = StyleSheet.create({
     gap: 20,
     paddingHorizontal: 10,
     paddingTop: 15,
+  },
+  loading_container: {
+    alignItems: "center",
+    justifyContent: "center",
   },
   search_bar: {
     backgroundColor: "#FFFFFF",

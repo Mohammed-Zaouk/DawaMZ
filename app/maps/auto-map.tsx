@@ -28,8 +28,8 @@ export default function AutoMap() {
 
   const mapRef = useRef<MapView>(null);
   const [region, setRegion] = useState<Region>({
-    latitude: 0,
-    longitude: 0,
+    latitude: Number(latitude),
+    longitude: Number(longitude),
     latitudeDelta: 0.005,
     longitudeDelta: 0.005,
   });
@@ -173,8 +173,8 @@ export default function AutoMap() {
               latitude: nearbypharmacy.latitude,
               longitude: nearbypharmacy.longitude,
             }}
-            title={text.title}
-            description={text.description}
+            title={text.title as string}
+            description={text.description as string}
             pinColor={isOpen ? "#09C849" : "#EF4444"}
           />
         </MapView>

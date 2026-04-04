@@ -1,304 +1,53 @@
-export const pharmaciesByCity: Record<
-  string,
-  {
-    id: string;
-    name: string;
-    nameAr: string;
-    address: string;
-    addressAr: string;
-    phone: string;
-    latitude: number;
-    longitude: number;
-    open: boolean;
-    rating?: number;
-    isNightPharmacy?: boolean;
-    isOnCall?: boolean;
-    dutyStart: string;
-    dutyEnd: string;
-  }[]
-> = {
-  "1": [
+type TimeRange = { open: string; close: string };
+
+type DaySchedule = TimeRange[] | null;
+
+type Schedule = {
+  monday: DaySchedule;
+  tuesday: DaySchedule;
+  wednesday: DaySchedule;
+  thursday: DaySchedule;
+  friday: DaySchedule;
+  saturday: DaySchedule;
+  sunday: DaySchedule;
+};
+
+type Pharmacy = {
+  id: string;
+  name: string;
+  nameAr: string;
+  address: string;
+  addressAr: string;
+  phone: string;
+  latitude: number;
+  longitude: number;
+  open: boolean;
+  rating?: number;
+  isNightPharmacy?: boolean;
+  isOnCall?: boolean;
+  dutyStart: string;
+  dutyEnd: string;
+  schedule: Schedule | null;
+};
+
+export const pharmaciesByCity: Record<string, Pharmacy[]> = {
+  "99": [
     {
       id: "1",
-      name: "Pharmacy Al Amal",
-      nameAr: "صيدلية الأمل",
-      address: "123 Main St, Tangier",
-      addressAr: "123 الشارع الرئيسي، طنجة",
-      phone: "+212 539-123456",
-      latitude: 35.7595,
-      longitude: -5.834,
+      name: "Pharmacie Bir Gandouz",
+      nameAr: "صيدلية بير غاندوز",
+      address: "3732+Q6J Bir Gandouz Maroc, Bir Gandouz",
+      addressAr: "3732+Q6J بير كندوز المغرب، بير كندوز",
+      phone: "0610636167",
+      latitude: 22.0544375,
+      longitude: -16.7494375,
       open: true,
-      rating: 4.5,
-      isNightPharmacy: false,
-      isOnCall: true,
-      dutyStart: "2026-03-09",
-      dutyEnd: "2026-03-15",
-    },
-    {
-      id: "2",
-      name: "Pharmacy Assafa",
-      nameAr: "صيدلية الصفاء",
-      address: "456 High St, Tangier",
-      addressAr: "456 الشارع العالي، طنجة",
-      phone: "+212 539-234567",
-      latitude: 35.7642,
-      longitude: -5.8298,
-      open: false,
-      rating: 4.2,
-      isNightPharmacy: false,
-      isOnCall: false,
-      dutyStart: "2026-03-09",
-      dutyEnd: "2026-03-15",
-    },
-    {
-      id: "3",
-      name: "Pharmacy Ibn Sina",
-      nameAr: "صيدلية ابن سينا",
-      address: "78 Rue de Fes, Tangier",
-      addressAr: "78 شارع فاس، طنجة",
-      phone: "+212 539-345678",
-      latitude: 35.7689,
-      longitude: -5.8412,
-      open: true,
-      rating: 4.7,
-      isNightPharmacy: true,
-      isOnCall: false,
-      dutyStart: "2026-03-09",
-      dutyEnd: "2026-03-15",
-    },
-    {
-      id: "4",
-      name: "Pharmacy Al Shifa",
-      nameAr: "صيدلية الشفاء",
-      address: "12 Blvd Hassan II, Tangier",
-      addressAr: "12 شارع الحسن الثاني، طنجة",
-      phone: "+212 539-456789",
-      latitude: 35.7721,
-      longitude: -5.8367,
-      open: false,
-      rating: 4.0,
-      isNightPharmacy: false,
-      isOnCall: false,
-      dutyStart: "2026-03-09",
-      dutyEnd: "2026-03-15",
-    },
-  ],
-  "2": [
-    {
-      id: "5",
-      name: "Pharmacy Al Nour",
-      nameAr: "صيدلية النور",
-      address: "34 Rue Tetouan",
-      addressAr: "34 شارع تطوان",
-      phone: "+212 539-567890",
-      latitude: 35.7556,
-      longitude: -5.8245,
-      open: true,
-      rating: 4.3,
-      isNightPharmacy: false,
-      isOnCall: true,
-      dutyStart: "2026-03-09",
-      dutyEnd: "2026-03-15",
-    },
-    {
-      id: "6",
-      name: "Pharmacy Al Rahma",
-      nameAr: "صيدلية الرحمة",
-      address: "90 Ave Mohammed V",
-      addressAr: "90 شارع محمد الخامس",
-      phone: "+212 539-678901",
-      latitude: 35.7603,
-      longitude: -5.819,
-      open: true,
-      rating: 4.6,
-      isNightPharmacy: true,
-      isOnCall: false,
-      dutyStart: "2026-03-09",
-      dutyEnd: "2026-03-15",
-    },
-    {
-      id: "7",
-      name: "Pharmacy Al Wifaq",
-      nameAr: "صيدلية الوفاق",
-      address: "55 Rue Al Majd",
-      addressAr: "55 شارع المجد",
-      phone: "+212 539-789012",
-      latitude: 35.7528,
-      longitude: -5.8312,
-      open: false,
-      rating: 3.9,
-      isNightPharmacy: false,
-      isOnCall: false,
-      dutyStart: "2026-03-09",
-      dutyEnd: "2026-03-15",
-    },
-  ],
-  "3": [
-    {
-      id: "8",
-      name: "Pharmacy Al Baraka",
-      nameAr: "صيدلية البركة",
-      address: "22 Rue Oujda",
-      addressAr: "22 شارع وجدة",
-      phone: "+212 536-123456",
-      latitude: 34.6814,
-      longitude: -1.9086,
-      open: false,
-      rating: 4.1,
-      isNightPharmacy: false,
-      isOnCall: true,
-      dutyStart: "2026-03-09",
-      dutyEnd: "2026-03-15",
-    },
-    {
-      id: "9",
-      name: "Pharmacy Al Hikma",
-      nameAr: "صيدلية الحكمة",
-      address: "67 Ave Al Massira",
-      addressAr: "67 شارع المسيرة",
-      phone: "+212 536-234567",
-      latitude: 34.6867,
-      longitude: -1.9142,
-      open: true,
-      rating: 4.4,
-      isNightPharmacy: false,
-      isOnCall: false,
-      dutyStart: "2026-03-09",
-      dutyEnd: "2026-03-15",
-    },
-    {
-      id: "10",
-      name: "Pharmacy Al Aman",
-      nameAr: "صيدلية الأمان",
-      address: "11 Blvd Zerktouni",
-      addressAr: "11 شارع الزرقطوني",
-      phone: "+212 536-345678",
-      latitude: 34.6753,
-      longitude: -1.9023,
-      open: true,
-      rating: 4.8,
-      isNightPharmacy: true,
-      isOnCall: true,
-      dutyStart: "2026-03-09",
-      dutyEnd: "2026-03-15",
-    },
-  ],
-  "4": [
-    {
-      id: "11",
-      name: "Pharmacy Al Hayat",
-      nameAr: "صيدلية الحياة",
-      address: "5 Rue Nador",
-      addressAr: "5 شارع الناظور",
-      phone: "+212 536-456789",
-      latitude: 34.6892,
-      longitude: -1.9178,
-      open: true,
-      rating: 4.5,
-      isNightPharmacy: false,
-      isOnCall: false,
-      dutyStart: "2026-03-09",
-      dutyEnd: "2026-03-15",
-    },
-    {
-      id: "12",
-      name: "Pharmacy Al Salam",
-      nameAr: "صيدلية السلام",
-      address: "88 Ave Hassan I",
-      addressAr: "88 شارع الحسن الأول",
-      phone: "+212 536-567890",
-      latitude: 34.6741,
-      longitude: -1.9055,
-      open: false,
-      rating: 4.2,
-      isNightPharmacy: false,
-      isOnCall: true,
-      dutyStart: "2026-03-09",
-      dutyEnd: "2026-03-15",
-    },
-  ],
-  "5": [
-    {
-      id: "13",
-      name: "Pharmacy Al Zahra",
-      nameAr: "صيدلية الزهراء",
-      address: "3 Rue Talaa Kebira, Fes",
-      addressAr: "3 شارع طالعة الكبيرة، فاس",
-      phone: "+212 535-123456",
-      latitude: 34.0631,
-      longitude: -5.0081,
-      open: true,
-      rating: 4.6,
-      isNightPharmacy: true,
-      isOnCall: false,
-      dutyStart: "2026-03-09",
-      dutyEnd: "2026-03-15",
-    },
-    {
-      id: "14",
-      name: "Pharmacy Al Fath",
-      nameAr: "صيدلية الفتح",
-      address: "29 Ave Allal Al Fassi, Fes",
-      addressAr: "29 شارع علال الفاسي، فاس",
-      phone: "+212 535-234567",
-      latitude: 34.0542,
-      longitude: -5.0023,
-      open: false,
-      rating: 4.0,
-      isNightPharmacy: false,
-      isOnCall: false,
-      dutyStart: "2026-03-09",
-      dutyEnd: "2026-03-15",
-    },
-    {
-      id: "15",
-      name: "Pharmacy Ibn Rushd",
-      nameAr: "صيدلية ابن رشد",
-      address: "14 Blvd Moulay Youssef, Fes",
-      addressAr: "14 شارع مولاي يوسف، فاس",
-      phone: "+212 535-345678",
-      latitude: 34.0678,
-      longitude: -5.0145,
-      open: true,
-      rating: 4.7,
-      isNightPharmacy: false,
-      isOnCall: true,
-      dutyStart: "2026-03-09",
-      dutyEnd: "2026-03-15",
-    },
-  ],
-  "6": [
-    {
-      id: "16",
-      name: "Pharmacy Al Karama",
-      nameAr: "صيدلية الكرامة",
-      address: "7 Rue Meknes Centre",
-      addressAr: "7 شارع مكناس المركز",
-      phone: "+212 535-456789",
-      latitude: 34.0489,
-      longitude: -5.0198,
-      open: false,
       rating: 3.8,
-      isNightPharmacy: false,
-      isOnCall: false,
-      dutyStart: "2026-03-09",
-      dutyEnd: "2026-03-15",
-    },
-    {
-      id: "17",
-      name: "Pharmacy Al Riad",
-      nameAr: "صيدلية الرياض",
-      address: "43 Ave des FAR, Meknes",
-      addressAr: "43 شارع القوات المسلحة، مكناس",
-      phone: "+212 535-567890",
-      latitude: 33.8959,
-      longitude: -5.5473,
-      open: true,
-      rating: 4.4,
       isNightPharmacy: true,
-      isOnCall: false,
-      dutyStart: "2026-03-09",
-      dutyEnd: "2026-03-15",
+      isOnCall: true,
+      dutyStart: "24h",
+      dutyEnd: "24h",
+      schedule: null,
     },
   ],
 };
