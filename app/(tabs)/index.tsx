@@ -21,7 +21,7 @@ export default function Index() {
   const mapRedirect = async () => {
     const loc = await getUserLocation();
     if (loc) {
-      router.replace({
+      router.push({
         pathname: "/maps/auto-map",
         params: { latitude: loc.latitude, longitude: loc.longitude },
       });

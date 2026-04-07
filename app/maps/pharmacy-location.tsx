@@ -13,7 +13,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import MapView, { Marker, Region } from "react-native-maps";
 import { Button, Snackbar } from "react-native-paper";
@@ -122,7 +122,7 @@ export default function PharmacyMap() {
         directions: "الاتجاهات",
         call: "اتصال",
         copy: "نسخ",
-        locationWarning: "فعّل الموقع لعرض المسافة والاتجاهات",
+        locationWarning: "يرجى اعطاء صلاحيات الوصول للموقع لعرض المسافة",
         copied: "تم نسخ العنوان",
       };
     } else if (language === "fr") {
@@ -133,7 +133,8 @@ export default function PharmacyMap() {
         directions: "Itinéraire",
         call: "Appeler",
         copy: "Copier",
-        locationWarning: "Activez la localisation pour voir la distance",
+        locationWarning:
+          "Veuillez autoriser la localisation pour voir la distance",
         copied: "Adresse copiée",
       };
     } else {
@@ -144,7 +145,7 @@ export default function PharmacyMap() {
         directions: "Directions",
         call: "Call",
         copy: "Copy",
-        locationWarning: "Enable location to see distance & directions",
+        locationWarning: "Please allow location access to see the distance",
         copied: "Address copied to clipboard",
       };
     }
@@ -561,7 +562,7 @@ const styles = StyleSheet.create({
   snackbar: {
     borderRadius: 12,
     marginHorizontal: 16,
-    marginBottom: 100,
+    marginBottom: 120,
     backgroundColor: "#1C1C1E",
   },
 });

@@ -3,6 +3,7 @@ import Divider from "@/components/divider_line";
 import Loading from "@/components/loading";
 import { PulseDot } from "@/components/pulse_dot";
 import { useLanguage } from "@/context/LanguageContext";
+import { getScheduleStatus, isOpenNow, ScheduleStatus } from "@/utils/isOpen";
 import {
   calculateDistance,
   formatDistance,
@@ -11,7 +12,7 @@ import { getUserLocation } from "@/utils/location/getLocation";
 import { supabase } from "@/utils/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -55,16 +56,35 @@ type Pharmacy = {
   distance?: number;
 };
 
+// ─── helpers ───────────────────────────────────────────────────────────────
+
+const formatDate = (dateStr: string, language: string | null) => {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  return date.toLocaleDateString(
+    language === "ar" ? "ar-MA" : language === "fr" ? "fr-FR" : "en-GB",
+    { day: "numeric", month: "short" },
+  );
+};
+
+const getTodayLabel = (language: string | null) => {
+  return new Date().toLocaleDateString(
+    language === "ar" ? "ar-MA" : language === "fr" ? "fr-FR" : "en-GB",
+    { weekday: "long", day: "numeric", month: "long", year: "numeric" },
+  );
+};
+
+// ─── page ──────────────────────────────────────────────────────────────────
+
 export default function PharmaciesPage() {
   const [searchParmacy, setSearchParmacy] = useState("");
   const { language } = useLanguage();
   const [activeFilter, setActiveFilter] = useState("all");
   const { cityId, cityName, cityNameAr } = useLocalSearchParams();
-  const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
-  const [loading, setLoading] = useState(true);
   const [pharmaciesWithDistance, setPharmaciesWithDistance] = useState<
     Pharmacy[]
   >([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchPharmacies();
@@ -83,7 +103,6 @@ export default function PharmaciesPage() {
       return;
     }
 
-    setPharmacies(data ?? []);
     await calcDistance(data ?? []);
     setLoading(false);
   };
@@ -112,13 +131,14 @@ export default function PharmaciesPage() {
     if (language === "ar") {
       return {
         openBadge: "مفتوح الآن",
+        closingBadge: "يغلق قريباً",
+        lunchBadge: "استراحة الغداء",
         closedBadge: "مغلقة",
         directionsButton: "عرض الاتجاهات",
         locationButton: "عرض الموقع",
         filterAll: "الكل",
         filterNight: "ليلية",
         filterOnCall: "في الخدمة",
-        distance: "المسافة",
         locationPermission: "يرجى اعطاء صلاحيات الوصول للموقع لعرض المسافة",
         search: "ابحث عن صيدلية...",
         noResults: "لا توجد صيدليات مطابقة",
@@ -130,19 +150,29 @@ export default function PharmaciesPage() {
         noNightDataSub: "لا توجد صيدليات ليلية مفتوحة حالياً في هذه المدينة",
         noOnCallData: "لا توجد صيدليات مناوبة مفتوحة",
         noOnCallDataSub: "لا توجد صيدليات مناوبة مفتوحة حالياً في هذه المدينة",
+        dutyLabel: "مناوبة",
+        nightLabel: "ليلية",
+        alwaysOpen: "مفتوح 24 ساعة",
+        closingSoon: (t: number) => `يغلق خلال ${t} دقيقة`,
+        lunchReopens: (t: string) => `يعيد الفتح · ${t}`,
+        opensAt: (day: string, t: string) => `يفتح ${day} · ${t}`,
+        dutyPeriod: (s: string, e: string) => `مناوبة: ${s} — ${e}`,
+        dutyStartsOn: (s: string) => `تبدأ المناوبة: ${s}`,
+        tomorrow: "غداً",
       };
     } else if (language === "fr") {
       return {
         openBadge: "Ouvert maintenant",
+        closingBadge: "Ferme bientôt",
+        lunchBadge: "Pause déjeuner",
         closedBadge: "Fermé",
         directionsButton: "Itinéraire",
         locationButton: "Localisation",
         filterAll: "Toutes",
         filterNight: "Nuit",
         filterOnCall: "De garde",
-        distance: "Distance",
         locationPermission:
-          "Veuillez autoriser l'accès à la localisation pour voir la distance",
+          "Veuillez autoriser la localisation pour voir la distance",
         search: "Rechercher une pharmacie...",
         noResults: "Aucune pharmacie trouvée",
         noResultsSub: "Vous êtes sûr du nom ? Suggérez-la pour l'ajouter.",
@@ -156,17 +186,27 @@ export default function PharmaciesPage() {
         noOnCallData: "Aucune pharmacie de garde ouverte",
         noOnCallDataSub:
           "Aucune pharmacie de garde n'est ouverte en ce moment dans cette ville",
+        dutyLabel: "Garde",
+        nightLabel: "Nuit",
+        alwaysOpen: "Ouvert 24h/24",
+        closingSoon: (t: number) => `Ferme dans ${t} min`,
+        lunchReopens: (t: string) => `Réouvre à ${t}`,
+        opensAt: (day: string, t: string) => `Ouvre ${day} à ${t}`,
+        dutyPeriod: (s: string, e: string) => `Garde: ${s} — ${e}`,
+        dutyStartsOn: (s: string) => `Garde commence: ${s}`,
+        tomorrow: "demain",
       };
     } else {
       return {
         openBadge: "Open now",
+        closingBadge: "Closing soon",
+        lunchBadge: "Lunch break",
         closedBadge: "Closed",
         directionsButton: "Directions",
         locationButton: "Location",
         filterAll: "All",
         filterNight: "Night",
         filterOnCall: "On Call",
-        distance: "Distance",
         locationPermission: "Please allow location access to see the distance",
         search: "Search pharmacies...",
         noResults: "No pharmacies found",
@@ -179,6 +219,15 @@ export default function PharmaciesPage() {
         noOnCallData: "No open on-call pharmacies",
         noOnCallDataSub:
           "No on-call pharmacies are currently open in this city",
+        dutyLabel: "On Call",
+        nightLabel: "Night",
+        alwaysOpen: "Open 24 hours",
+        closingSoon: (t: number) => `Closes in ${t} min`,
+        lunchReopens: (t: string) => `Reopens at ${t}`,
+        opensAt: (day: string, t: string) => `Opens ${day} · ${t}`,
+        dutyPeriod: (s: string, e: string) => `On call: ${s} — ${e}`,
+        dutyStartsOn: (s: string) => `On call starts: ${s}`,
+        tomorrow: "tomorrow",
       };
     }
   };
@@ -186,9 +235,17 @@ export default function PharmaciesPage() {
   const text = getText();
 
   const filteredPharmacies = pharmaciesWithDistance.filter((pharmacy) => {
-    if (activeFilter === "night") return pharmacy.is_night_pharmacy === true;
-    else if (activeFilter === "oncall") return pharmacy.is_on_call === true;
-    return pharmacy.open === true;
+    const open = isOpenNow(
+      pharmacy.schedule,
+      pharmacy.is_on_call ?? false,
+      pharmacy.duty_start,
+      pharmacy.duty_end,
+      pharmacy.is_night_pharmacy ?? false,
+    );
+    if (activeFilter === "night")
+      return pharmacy.is_night_pharmacy === true && open;
+    if (activeFilter === "oncall") return pharmacy.is_on_call === true && open;
+    return open;
   });
 
   const filterData = filteredPharmacies.filter(
@@ -197,9 +254,7 @@ export default function PharmaciesPage() {
       pharmacy.name_ar.includes(searchParmacy),
   );
 
-  if (loading) {
-    return <Loading />;
-  }
+  if (loading) return <Loading />;
 
   return (
     <SafeAreaView style={styles.screen_container}>
@@ -213,6 +268,7 @@ export default function PharmaciesPage() {
         placeholderTextColor="#a0b4c8"
         inputStyle={{ color: "#1a3a6e", fontSize: 16, paddingBottom: 9 }}
       />
+
       <View style={styles.filter_bar_wrapper}>
         <ScrollView
           horizontal
@@ -278,23 +334,21 @@ export default function PharmaciesPage() {
           </Button>
         </ScrollView>
       </View>
+
+      <View style={styles.date_strip}>
+        <View style={styles.side_line} />
+        <Text style={styles.date_strip_text}>{getTodayLabel(language)}</Text>
+        <View style={styles.side_line} />
+      </View>
+
       <FlatList
         data={filterData}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <CardItem
-            id={item.id}
-            nameAr={item.name_ar}
-            name={item.name}
+            pharmacy={item}
             cityName={cityName as string}
             cityNameAr={cityNameAr as string}
-            addressAr={item.address_ar}
-            address={item.address}
-            phone={item.phone}
-            open={item.open}
-            dutyStart={item.duty_start}
-            dutyEnd={item.duty_end}
-            distance={item.distance}
             language={language}
             text={text}
           />
@@ -313,6 +367,8 @@ export default function PharmaciesPage() {
   );
 }
 
+// ─── empty state ───────────────────────────────────────────────────────────
+
 function EmptyState({
   text,
   isSearching,
@@ -323,27 +379,24 @@ function EmptyState({
   activeFilter: string;
 }) {
   const getContent = () => {
-    if (isSearching) {
+    if (isSearching)
       return {
         icon: "search-outline" as const,
         title: text.noResults,
         subtitle: text.noResultsSub,
       };
-    }
-    if (activeFilter === "night") {
+    if (activeFilter === "night")
       return {
         icon: "moon-outline" as const,
         title: text.noNightData,
         subtitle: text.noNightDataSub,
       };
-    }
-    if (activeFilter === "oncall") {
+    if (activeFilter === "oncall")
       return {
         icon: "call-outline" as const,
         title: text.noOnCallData,
         subtitle: text.noOnCallDataSub,
       };
-    }
     return {
       icon: "medkit-outline" as const,
       title: text.noData,
@@ -370,38 +423,39 @@ function EmptyState({
   );
 }
 
+// ─── card ──────────────────────────────────────────────────────────────────
+
 function CardItem({
-  id,
-  nameAr,
-  name,
+  pharmacy,
   cityName,
   cityNameAr,
-  addressAr,
-  address,
-  phone,
-  open,
-  dutyStart,
-  dutyEnd,
-  distance,
   language,
   text,
 }: {
-  id: string;
-  nameAr: string;
-  name: string;
+  pharmacy: Pharmacy;
   cityName: string;
   cityNameAr: string;
-  addressAr: string;
-  address: string;
-  phone: string;
-  open: boolean;
-  dutyStart: string;
-  dutyEnd: string;
-  distance?: number;
   language: string | null;
   text: any;
 }) {
   const router = useRouter();
+
+  const status: ScheduleStatus = useMemo(
+    () =>
+      getScheduleStatus(
+        pharmacy.schedule,
+        pharmacy.is_on_call ?? false,
+        pharmacy.duty_start,
+        pharmacy.duty_end,
+        pharmacy.is_night_pharmacy ?? false,
+      ),
+    [pharmacy],
+  );
+
+  const isOpen =
+    status.type === "always_open" ||
+    status.type === "open" ||
+    status.type === "lunch_break";
 
   const mapRedirect = async () => {
     const loc = await getUserLocation();
@@ -416,27 +470,122 @@ function CardItem({
     }
   };
 
+  const badge = useMemo(() => {
+    if (status.type === "open" && status.closingSoon)
+      return { label: text.closingBadge, color: "#d97706", dot: "#f59e0b" };
+    if (status.type === "lunch_break")
+      return { label: text.lunchBadge, color: "#d97706", dot: "#f59e0b" };
+    if (isOpen)
+      return { label: text.openBadge, color: "#22c55e", dot: "#22c55e" };
+    return { label: text.closedBadge, color: "#ef4444", dot: "#ef4444" };
+  }, [status]);
+
+  const scheduleRow = useMemo(() => {
+    switch (status.type) {
+      case "always_open":
+        return {
+          label: text.alwaysOpen,
+          color: "#22c55e",
+          icon: "time-outline" as const,
+          bg: "#f0fdf4",
+        };
+      case "open":
+        if (status.closingSoon)
+          return {
+            label: text.closingSoon(status.minsLeft),
+            color: "#d97706",
+            icon: "time-outline" as const,
+            bg: "#fffbeb",
+          };
+        return {
+          label: status.nextSlot
+            ? `${status.slot.open} — ${status.slot.close} · ${status.nextSlot.open} — ${status.nextSlot.close}`
+            : `${status.slot.open} — ${status.slot.close}`,
+          color: "#828282",
+          icon: "time-outline" as const,
+          bg: "#EEF4FF",
+        };
+      case "lunch_break":
+        return {
+          label: text.lunchReopens(status.reopensAt),
+          color: "#d97706",
+          icon: "restaurant-outline" as const,
+          bg: "#fffbeb",
+        };
+      case "closed":
+        if (status.opensDay === "duty")
+          return {
+            label: text.dutyStartsOn(formatDate(status.opensAt, language)),
+            color: "#7c3aed",
+            icon: "calendar-outline" as const,
+            bg: "#f5f3ff",
+          };
+        return {
+          label: text.opensAt(
+            status.opensDay === "tomorrow" ? text.tomorrow : status.opensDay,
+            status.opensAt,
+          ),
+          color: "#ef4444",
+          icon: "time-outline" as const,
+          bg: "#fef2f2",
+        };
+      default:
+        return {
+          label: "—",
+          color: "#828282",
+          icon: "time-outline" as const,
+          bg: "#EEF4FF",
+        };
+    }
+  }, [status, language]);
+
+  const showDutyPeriod =
+    (pharmacy.is_on_call || pharmacy.is_night_pharmacy) &&
+    pharmacy.duty_start &&
+    pharmacy.duty_end &&
+    pharmacy.duty_start !== "24h";
+
+  const warningBanner = useMemo(() => {
+    if (status.type === "open" && status.closingSoon && status.nextSlot)
+      return text.lunchReopens(status.nextSlot.open);
+    return null;
+  }, [status]);
+
   return (
     <View style={styles.card}>
       <View style={styles.card_content}>
+        {/* header */}
         <View style={styles.card_header}>
           <View style={styles.badge_container}>
-            <PulseDot color={open ? "#22c55e" : "#ef4444"} />
-            <Text style={open ? styles.badge_open : styles.badge_closed}>
-              {open ? text.openBadge : text.closedBadge}
+            <PulseDot color={badge.dot} />
+            <Text style={[styles.badge_text, { color: badge.color }]}>
+              {badge.label}
             </Text>
           </View>
-          <Text
-            style={styles.card_title}
-            numberOfLines={1}
-            ellipsizeMode="tail"
-          >
-            {language === "ar" ? nameAr : name}
-          </Text>
+          <View style={styles.title_row}>
+            {pharmacy.is_night_pharmacy && (
+              <View style={[styles.type_pill, styles.pill_night]}>
+                <Text style={styles.pill_night_text}>{text.nightLabel}</Text>
+              </View>
+            )}
+            {pharmacy.is_on_call && (
+              <View style={[styles.type_pill, styles.pill_oncall]}>
+                <Text style={styles.pill_oncall_text}>{text.dutyLabel}</Text>
+              </View>
+            )}
+            <Text
+              style={styles.card_title}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {language === "ar" ? pharmacy.name_ar : pharmacy.name}
+            </Text>
+          </View>
         </View>
 
         <Divider style={styles.divider} />
 
+        {/* info rows */}
         <View style={styles.info_container}>
           <View style={styles.info_row}>
             <Text
@@ -444,19 +593,20 @@ function CardItem({
               numberOfLines={1}
               ellipsizeMode="tail"
             >
-              {language === "ar" ? addressAr : address}
+              {language === "ar" ? pharmacy.address_ar : pharmacy.address}
             </Text>
             <View style={styles.info_icon_wrap}>
               <Ionicons name="location-outline" size={13} color="#3385FF" />
             </View>
           </View>
+
           <View style={styles.info_row}>
             <Text
               style={styles.info_text}
               numberOfLines={1}
               ellipsizeMode="tail"
             >
-              {phone}
+              {pharmacy.phone}
             </Text>
             <View style={styles.info_icon_wrap}>
               <Ionicons name="call-outline" size={13} color="#3385FF" />
@@ -471,28 +621,79 @@ function CardItem({
               numberOfLines={1}
               ellipsizeMode="tail"
             >
-              {distance !== undefined
-                ? formatDistance(distance)
+              {pharmacy.distance !== undefined
+                ? formatDistance(pharmacy.distance)
                 : text.locationPermission}
             </Text>
             <View style={styles.info_icon_wrap}>
               <Ionicons name="walk-outline" size={13} color="#3385FF" />
             </View>
           </View>
+
+          {/* duty period */}
+          {showDutyPeriod && (
+            <View style={styles.info_row}>
+              <Text
+                style={[
+                  styles.info_text,
+                  { color: "#3385FF", fontWeight: "500" },
+                ]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {text.dutyPeriod(
+                  formatDate(pharmacy.duty_start, language),
+                  formatDate(pharmacy.duty_end, language),
+                )}
+              </Text>
+              <View
+                style={[styles.info_icon_wrap, { backgroundColor: "#f5f3ff" }]}
+              >
+                <Ionicons name="calendar-outline" size={13} color="#3385FF" />
+              </View>
+            </View>
+          )}
+
+          {/* schedule row */}
           <View style={styles.info_row}>
             <Text
-              style={styles.info_text}
+              style={[
+                styles.info_text,
+                { color: scheduleRow.color, fontWeight: "500" },
+              ]}
               numberOfLines={1}
               ellipsizeMode="tail"
             >
-              {dutyStart} -- {dutyEnd}
+              {scheduleRow.label}
             </Text>
-            <View style={styles.info_icon_wrap}>
-              <Ionicons name="calendar-outline" size={13} color="#3385FF" />
+            <View
+              style={[
+                styles.info_icon_wrap,
+                { backgroundColor: scheduleRow.bg },
+              ]}
+            >
+              <Ionicons
+                name={scheduleRow.icon}
+                size={13}
+                color={scheduleRow.color}
+              />
             </View>
           </View>
+
+          {/* warning banner */}
+          {warningBanner && (
+            <View style={styles.warning_banner}>
+              <Text style={styles.warning_banner_text}>{warningBanner}</Text>
+              <Ionicons
+                name="information-circle-outline"
+                size={13}
+                color="#3385FF"
+              />
+            </View>
+          )}
         </View>
 
+        {/* action buttons */}
         <View style={styles.button_container}>
           <TouchableOpacity onPress={mapRedirect} style={styles.card_button}>
             <Ionicons name="navigate-outline" size={14} color="#3385FF" />
@@ -504,8 +705,8 @@ function CardItem({
               router.push({
                 pathname: "/maps/pharmacy-location",
                 params: {
-                  pharmacyId: id,
-                  distance: distance,
+                  pharmacyId: pharmacy.id,
+                  distance: pharmacy.distance,
                   cityName: cityName,
                   cityNameAr: cityNameAr,
                 },
@@ -530,6 +731,22 @@ const styles = StyleSheet.create({
     gap: 15,
     paddingHorizontal: 10,
     paddingTop: 15,
+  },
+  date_strip: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 5,
+  },
+  side_line: {
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.35)",
+    flex: 1,
+  },
+  date_strip_text: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.75)",
+    fontWeight: "500",
+    letterSpacing: 0.3,
   },
   search_bar: {
     backgroundColor: "#FFFFFF",
@@ -577,36 +794,36 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
+  title_row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    flex: 1,
+    justifyContent: "flex-end",
+    marginLeft: 8,
+  },
   card_title: {
     fontSize: 17.3,
     fontWeight: "700",
     color: "#274796",
     textAlign: "right",
     writingDirection: "rtl",
-    flex: 1,
-    marginLeft: 8,
+    flexShrink: 1,
   },
-  // Badge
-  badge_container: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
+  type_pill: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 50,
+    flexShrink: 0,
   },
-  badge_open: {
-    color: "#22c55e",
-    fontSize: 11.5,
-  },
-  badge_closed: {
-    color: "#ef4444",
-    fontSize: 11.5,
-  },
-  divider: {
-    marginVertical: 7,
-  },
-  // Info
-  info_container: {
-    gap: 4,
-  },
+  pill_night: { backgroundColor: "#EEEDFE" },
+  pill_night_text: { fontSize: 10, color: "#534AB7", fontWeight: "600" },
+  pill_oncall: { backgroundColor: "#E1F5EE" },
+  pill_oncall_text: { fontSize: 10, color: "#0F6E56", fontWeight: "600" },
+  badge_container: { flexDirection: "row", alignItems: "center", gap: 5 },
+  badge_text: { fontSize: 11.5, fontWeight: "500" },
+  divider: { marginVertical: 7 },
+  info_container: { gap: 4 },
   info_row: {
     flexDirection: "row",
     alignItems: "center",
@@ -615,6 +832,7 @@ const styles = StyleSheet.create({
   },
   info_text: {
     fontSize: 15,
+    paddingLeft: 25,
     color: "#828282",
     textAlign: "right",
     writingDirection: "rtl",
@@ -626,6 +844,22 @@ const styles = StyleSheet.create({
     backgroundColor: "#EEF4FF",
     alignItems: "center",
     justifyContent: "center",
+  },
+  warning_banner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 6,
+    backgroundColor: "#EEF4FF", // matches info_icon_wrap bg — fits the blue theme
+    borderRadius: 8,
+    paddingVertical: 5,
+    paddingHorizontal: 8,
+    marginTop: 1,
+  },
+  warning_banner_text: {
+    fontSize: 15, // matches info_text size
+    color: "#3385FF", // your primary blue instead of amber
+    fontWeight: "500",
   },
   // Buttons
   button_container: {
@@ -651,11 +885,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
   },
-  button_text: {
-    fontSize: 13,
-    color: "#3385FF",
-  },
-  // Empty State
+  button_text: { fontSize: 13, color: "#3385FF" },
   empty_container: {
     alignItems: "center",
     justifyContent: "center",
@@ -675,11 +905,13 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#ffffff",
     letterSpacing: 0.2,
+    textAlign: "center",
   },
   empty_subtitle: {
     fontSize: 13,
     color: "rgba(255, 255, 255, 0.7)",
     fontWeight: "400",
+    textAlign: "center",
   },
   suggest_button: {
     flexDirection: "row",

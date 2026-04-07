@@ -22,28 +22,115 @@ const DAYS = [
   "saturday",
 ] as const;
 
-export function isOpenNow(
-  schedule: Schedule,
+const CLOSING_SOON_MINUTES = 45;
+const toMinutes = (time: string) => {
+  const [h, m] = time.split(":").map(Number);
+  return h * 60 + m;
+};
+
+export type ScheduleStatus =
+  | { type: "always_open" }
+  | {
+      type: "open";
+      slot: TimeRange;
+      closingSoon: boolean;
+      minsLeft: number;
+      nextSlot: TimeRange | null;
+    }
+  | { type: "lunch_break"; reopensAt: string }
+  | { type: "closed"; opensAt: string; opensDay: string };
+
+export function getScheduleStatus(
+  schedule: Schedule | null,
   isOnCall: boolean,
+  dutyStart: string,
+  dutyEnd: string,
   isNightPharmacy: boolean,
-): boolean {
-  if (isOnCall) return true;
-  if (isNightPharmacy) return true;
+): ScheduleStatus {
+  // on call with duty dates
+  if ((isOnCall || isNightPharmacy) && dutyStart && dutyEnd) {
+    if (dutyStart === "24h" || dutyEnd === "24h")
+      return { type: "always_open" };
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const start = new Date(dutyStart);
+    const end = new Date(dutyEnd);
+    end.setHours(23, 59, 59, 999);
+
+    if (today >= start && today <= end) return { type: "always_open" };
+    if (today < start) {
+      return { type: "closed", opensAt: dutyStart, opensDay: "duty" };
+    }
+  }
+
+  // no schedule at all
+  if (!schedule) return { type: "always_open" };
   const now = new Date();
-  const todaySchedule = schedule[DAYS[now.getDay()]];
-
-  if (!todaySchedule) return false;
+  const todayKey = DAYS[now.getDay()];
 
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const todaySlots = schedule[todayKey];
 
-  const isOpen = todaySchedule.some((range) => {
-    const [openH, openM] = range.open.split(":").map(Number);
-    const [closeH, closeM] = range.close.split(":").map(Number);
-    const openMinutes = openH * 60 + openM;
-    const closeMinutes = closeH * 60 + closeM;
-    return currentMinutes >= openMinutes && currentMinutes < closeMinutes;
-  });
+  if (todaySlots && todaySlots.length > 0) {
+    for (let i = 0; i < todaySlots.length; i++) {
+      const slot = todaySlots[i];
+      const openMin = toMinutes(slot.open);
+      const closeMin = toMinutes(slot.close);
 
-  return isOpen;
+      // currently open in this slot
+      if (currentMinutes >= openMin && currentMinutes < closeMin) {
+        const minsLeft = closeMin - currentMinutes;
+        const closingSoon = minsLeft <= CLOSING_SOON_MINUTES;
+        const nextSlot = todaySlots[i + 1] ?? null;
+
+        return { type: "open", slot, closingSoon, minsLeft, nextSlot };
+      }
+      // between two slots = lunch break
+      const nextSlot = todaySlots[i + 1];
+      if (
+        nextSlot &&
+        currentMinutes >= closeMin &&
+        currentMinutes < toMinutes(nextSlot.open)
+      ) {
+        return { type: "lunch_break", reopensAt: nextSlot.open };
+      }
+      // still a future slot today
+      if (currentMinutes < openMin) {
+        return { type: "closed", opensAt: slot.open, opensDay: "today" };
+      }
+    }
+  }
+  // after the loop, find next available day
+  for (let d = 1; d <= 7; d++) {
+    const nextDayKey = DAYS[(now.getDay() + d) % 7];
+    const nextSlots = schedule[nextDayKey];
+    if (nextSlots && nextSlots.length > 0) {
+      const dayLabel = d === 1 ? "tomorrow" : nextDayKey;
+      return { type: "closed", opensAt: nextSlots[0].open, opensDay: dayLabel };
+    }
+  }
+  return { type: "closed", opensAt: "--", opensDay: "--" };
+}
+// simple boolean for filtering — keeps existing filter logic working
+export function isOpenNow(
+  schedule: Schedule | null,
+  isOnCall: boolean,
+  dutyStart: string,
+  dutyEnd: string,
+  isNightPharmacy: boolean,
+): boolean {
+  const status = getScheduleStatus(
+    schedule,
+    isOnCall,
+    dutyStart,
+    dutyEnd,
+    isNightPharmacy,
+  );
+  return (
+    status.type === "always_open" ||
+    status.type === "open" ||
+    status.type === "lunch_break"
+  );
 }
