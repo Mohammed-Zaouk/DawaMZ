@@ -1,3 +1,4 @@
+import Loading from "@/components/loading";
 import { PulseDot } from "@/components/pulse_dot";
 import { useLanguage } from "@/context/LanguageContext";
 import { formatDistance } from "@/utils/location/calculateDistance";
@@ -5,7 +6,7 @@ import { findNearestOpenPharmacy } from "@/utils/location/nearest-open-pharmacy"
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Linking,
   StyleSheet,
@@ -17,9 +18,14 @@ import MapView, { Marker, Region } from "react-native-maps";
 import { Button, Snackbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+type NearbyPharmacy = Awaited<ReturnType<typeof findNearestOpenPharmacy>>;
+
 export default function AutoMap() {
   const { language } = useLanguage();
   const [snackbarVisible, setSnackbarVisible] = useState<boolean>(false);
+  const [nearbypharmacy, setNearbypharmacy] = useState<NearbyPharmacy>(null);
+  const [loading, setLoading] = useState(true);
+
   const { latitude, longitude } = useLocalSearchParams<{
     latitude: string;
     longitude: string;
@@ -34,18 +40,25 @@ export default function AutoMap() {
     longitudeDelta: 0.005,
   });
 
-  const nearbypharmacy = findNearestOpenPharmacy(
-    Number(latitude),
-    Number(longitude),
-  );
+  useEffect(() => {
+    const fetch = async () => {
+      const result = await findNearestOpenPharmacy(
+        Number(latitude),
+        Number(longitude),
+      );
+      setNearbypharmacy(result);
+      setLoading(false);
+    };
+    fetch();
+  }, []);
 
-  if (!nearbypharmacy) return null;
+  if (loading || !nearbypharmacy) return <Loading />;
 
   const getText = () => {
     if (language === "ar") {
       return {
-        title: nearbypharmacy.nameAr,
-        description: nearbypharmacy.addressAr,
+        title: nearbypharmacy.name_ar,
+        description: nearbypharmacy.address_ar,
         directions: "الاتجاهات",
         call: "اتصال",
         copy: "نسخ",

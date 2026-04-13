@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import * as dotenv from "dotenv";
-import { pharmaciesByCity } from "../data/pharmacies";
+import { pharmaciesByCity } from "../data/pharmacies/pharmacies";
 
 dotenv.config({ path: ".env" });
 dotenv.config({ path: ".env.local" });
@@ -110,7 +110,6 @@ const cityKeyToName: Record<string, string> = {
   "97": "Dakhla",
   "98": "Aousserd",
   "99": "Bir Gandouz",
-  "100": "Aridal",
 };
 
 async function seedPharmacies() {

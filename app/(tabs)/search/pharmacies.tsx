@@ -3,24 +3,24 @@ import Divider from "@/components/divider_line";
 import Loading from "@/components/loading";
 import { PulseDot } from "@/components/pulse_dot";
 import { useLanguage } from "@/context/LanguageContext";
+import { supabase } from "@/services/supabase";
 import { getScheduleStatus, isOpenNow, ScheduleStatus } from "@/utils/isOpen";
 import {
-  calculateDistance,
-  formatDistance,
+    calculateDistance,
+    formatDistance,
 } from "@/utils/location/calculateDistance";
 import { getUserLocation } from "@/utils/location/getLocation";
-import { supabase } from "@/utils/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Alert,
-  FlatList,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Alert,
+    FlatList,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { Button, Searchbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -159,6 +159,7 @@ export default function PharmaciesPage() {
         dutyPeriod: (s: string, e: string) => `مناوبة: ${s} — ${e}`,
         dutyStartsOn: (s: string) => `تبدأ المناوبة: ${s}`,
         tomorrow: "غداً",
+        noPhone: "رقم الهاتف غير متوفر",
       };
     } else if (language === "fr") {
       return {
@@ -195,6 +196,7 @@ export default function PharmaciesPage() {
         dutyPeriod: (s: string, e: string) => `Garde: ${s} — ${e}`,
         dutyStartsOn: (s: string) => `Garde commence: ${s}`,
         tomorrow: "demain",
+        noPhone: "Numéro non disponible",
       };
     } else {
       return {
@@ -228,6 +230,7 @@ export default function PharmaciesPage() {
         dutyPeriod: (s: string, e: string) => `On call: ${s} — ${e}`,
         dutyStartsOn: (s: string) => `On call starts: ${s}`,
         tomorrow: "tomorrow",
+        noPhone: "Phone number unavailable",
       };
     }
   };
@@ -602,11 +605,14 @@ function CardItem({
 
           <View style={styles.info_row}>
             <Text
-              style={styles.info_text}
+              style={[
+                styles.info_text,
+                !pharmacy.phone && styles.info_text_unavailable,
+              ]}
               numberOfLines={1}
               ellipsizeMode="tail"
             >
-              {pharmacy.phone}
+              {pharmacy.phone ?? text.noPhone}
             </Text>
             <View style={styles.info_icon_wrap}>
               <Ionicons name="call-outline" size={13} color="#3385FF" />
@@ -617,7 +623,10 @@ function CardItem({
 
           <View style={styles.info_row}>
             <Text
-              style={styles.info_text}
+              style={[
+                styles.info_text,
+                !pharmacy.distance && styles.info_text_unavailable,
+              ]}
               numberOfLines={1}
               ellipsizeMode="tail"
             >
@@ -793,6 +802,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginBottom: 3,
   },
   title_row: {
     flexDirection: "row",
@@ -823,7 +833,7 @@ const styles = StyleSheet.create({
   badge_container: { flexDirection: "row", alignItems: "center", gap: 5 },
   badge_text: { fontSize: 11.5, fontWeight: "500" },
   divider: { marginVertical: 7 },
-  info_container: { gap: 4 },
+  info_container: { gap: 7 },
   info_row: {
     flexDirection: "row",
     alignItems: "center",
@@ -845,20 +855,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  info_text_unavailable: {
+    fontStyle: "italic",
+    color: "#828282",
+  },
   warning_banner: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-end",
     gap: 6,
-    backgroundColor: "#EEF4FF", // matches info_icon_wrap bg — fits the blue theme
+    backgroundColor: "#EEF4FF",
     borderRadius: 8,
     paddingVertical: 5,
     paddingHorizontal: 8,
     marginTop: 1,
   },
   warning_banner_text: {
-    fontSize: 15, // matches info_text size
-    color: "#3385FF", // your primary blue instead of amber
+    fontSize: 15,
+    color: "#3385FF",
     fontWeight: "500",
   },
   // Buttons

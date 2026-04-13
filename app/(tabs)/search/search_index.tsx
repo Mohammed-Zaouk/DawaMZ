@@ -2,17 +2,11 @@ import BackgroundBubbles from "@/components/background_bubbles";
 import Divider from "@/components/divider_line";
 import Loading from "@/components/loading";
 import { useLanguage } from "@/context/LanguageContext";
-import { supabase } from "@/utils/supabase";
+import { supabase } from "@/services/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import {
-  FlatList,
-  Image,
-  StyleSheet,
-  Text,
-  View
-} from "react-native";
+import { FlatList, Image, StyleSheet, Text, View } from "react-native";
 import { Button, Searchbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 

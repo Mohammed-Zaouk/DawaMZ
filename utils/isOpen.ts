@@ -27,6 +27,8 @@ const toMinutes = (time: string) => {
   const [h, m] = time.split(":").map(Number);
   return h * 60 + m;
 };
+const is24Hours = (slots: TimeRange[]) =>
+  slots.some((s) => s.open === "00:00" && s.close === "23:59");
 
 export type ScheduleStatus =
   | { type: "always_open" }
@@ -73,6 +75,11 @@ export function getScheduleStatus(
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
   const todaySlots = schedule[todayKey];
 
+  // check if today is a 24h day
+  if (todaySlots && todaySlots.length > 0 && is24Hours(todaySlots)) {
+    return { type: "always_open" };
+  }
+
   if (todaySlots && todaySlots.length > 0) {
     for (let i = 0; i < todaySlots.length; i++) {
       const slot = todaySlots[i];
@@ -113,7 +120,7 @@ export function getScheduleStatus(
   }
   return { type: "closed", opensAt: "--", opensDay: "--" };
 }
-// simple boolean for filtering — keeps existing filter logic working
+
 export function isOpenNow(
   schedule: Schedule | null,
   isOnCall: boolean,

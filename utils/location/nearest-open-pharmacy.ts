@@ -1,35 +1,40 @@
-import { citiesByRegion } from "@/data/cities";
-import { pharmaciesByCity } from "@/data/pharmacies";
+import { supabase } from "@/services/supabase";
 import { calculateDistance } from "./calculateDistance";
 
-export const findNearestOpenPharmacy = (userLat: number, userLon: number) => {
+export const findNearestOpenPharmacy = async (
+  userLat: number,
+  userLon: number,
+) => {
+  const { data: pharmacies, error } = await supabase
+    .from("pharmacies")
+    .select("*, cities(name, name_ar)")
+    .eq("open", true);
+
+  if (error || !pharmacies) {
+    console.error("Failed to fetch pharmacies:", error?.message);
+    return null;
+  }
+
   let nearbypharmacy = null;
 
-  for (const cityId in pharmaciesByCity) {
-    for (const pharmacy of pharmaciesByCity[cityId]) {
-      if (!pharmacy.open) continue;
+  for (const pharmacy of pharmacies) {
+    const distance = calculateDistance(
+      userLat,
+      userLon,
+      pharmacy.latitude,
+      pharmacy.longitude,
+    );
 
-      const distance = calculateDistance(
-        userLat,
-        userLon,
-        pharmacy.latitude,
-        pharmacy.longitude,
-      );
-
-      if (!nearbypharmacy || distance < nearbypharmacy.distance) {
-        nearbypharmacy = { ...pharmacy, distance, cityId };
-      }
+    if (!nearbypharmacy || distance < nearbypharmacy.distance) {
+      nearbypharmacy = { ...pharmacy, distance };
     }
   }
 
   if (!nearbypharmacy) return null;
 
-  const allCities = Object.values(citiesByRegion).flat();
-  const city = allCities.find((c) => c.id === nearbypharmacy?.cityId);
-
   return {
     ...nearbypharmacy,
-    cityName: city?.name,
-    cityNameAr: city?.nameAr,
+    cityName: nearbypharmacy.cities?.name,
+    cityNameAr: nearbypharmacy.cities?.name_ar,
   };
 };
