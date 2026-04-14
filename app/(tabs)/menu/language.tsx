@@ -2,7 +2,7 @@ import BackgroundBubbles from "@/components/background_bubbles";
 import Header from "@/components/header";
 import { useLanguage } from "@/context/LanguageContext";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Button } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -12,6 +12,16 @@ export default function Language() {
   const [selectedLanguage, setSelectedLanguage] = useState(language);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const router = useRouter();
+  const navigating = useRef(false);
+
+  const handleNavigate = (route: string) => {
+    if (navigating.current) return;
+    navigating.current = true;
+    router.push(route as any);
+    setTimeout(() => {
+      navigating.current = false;
+    }, 500);
+  };
 
   const saveLanguage = async () => {
     if (!selectedLanguage) return;
@@ -19,7 +29,7 @@ export default function Language() {
     await setLanguage(selectedLanguage);
     await new Promise((resolve) => setTimeout(resolve, 1000));
     setIsLoading(false);
-    router.push("/(tabs)/menu");
+    handleNavigate("/(tabs)/menu");
   };
 
   const getText = () => {

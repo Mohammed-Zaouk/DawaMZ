@@ -5,7 +5,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { supabase } from "@/services/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FlatList, Image, StyleSheet, Text, View } from "react-native";
 import { Button, Searchbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -122,6 +122,8 @@ export default function SearchIndex() {
   );
 }
 
+// ─── empty state ───────────────────────────────────────────────────────────
+
 function EmptyState({
   text,
   isSearching,
@@ -148,6 +150,8 @@ function EmptyState({
   );
 }
 
+// ─── card ──────────────────────────────────────────────────────────────────
+
 function CardItem({
   id,
   name,
@@ -168,6 +172,19 @@ function CardItem({
   text: any;
 }) {
   const router = useRouter();
+  const navigating = useRef(false);
+
+  const handleNavigate = () => {
+    if (navigating.current) return;
+    navigating.current = true;
+    router.push({
+      pathname: "/(tabs)/search/cities",
+      params: { regionId: id },
+    });
+    setTimeout(() => {
+      navigating.current = false;
+    }, 500);
+  };
 
   const citiesText = cities?.map((c) => c.name).join(" - ");
   const citiesArText = cities?.map((c) => c.name_ar).join(" - ");
@@ -189,12 +206,7 @@ function CardItem({
         <View style={styles.button_container}>
           <Button
             mode="contained"
-            onPress={() =>
-              router.push({
-                pathname: "/(tabs)/search/cities",
-                params: { regionId: id },
-              })
-            }
+            onPress={handleNavigate}
             style={styles.card_button}
             labelStyle={styles.card_button_label}
             contentStyle={styles.card_button_content}

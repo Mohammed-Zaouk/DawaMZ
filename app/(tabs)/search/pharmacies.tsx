@@ -6,21 +6,21 @@ import { useLanguage } from "@/context/LanguageContext";
 import { supabase } from "@/services/supabase";
 import { getScheduleStatus, isOpenNow, ScheduleStatus } from "@/utils/isOpen";
 import {
-    calculateDistance,
-    formatDistance,
+  calculateDistance,
+  formatDistance,
 } from "@/utils/location/calculateDistance";
 import { getUserLocation } from "@/utils/location/getLocation";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
-    Alert,
-    FlatList,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  FlatList,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { Button, Searchbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -442,6 +442,7 @@ function CardItem({
   text: any;
 }) {
   const router = useRouter();
+  const navigating = useRef(false);
 
   const status: ScheduleStatus = useMemo(
     () =>
@@ -461,16 +462,41 @@ function CardItem({
     status.type === "lunch_break";
 
   const mapRedirect = async () => {
-    const loc = await getUserLocation();
-    if (loc) {
-      router.push({ pathname: "/maps/pharmacy-direction" });
-    } else {
-      Alert.alert(
-        "Location Required",
-        "Please enable location permissions to use auto search.",
-        [{ text: "OK" }],
-      );
+    if (navigating.current) return;
+    navigating.current = true;
+    try {
+      const loc = await getUserLocation();
+      if (loc) {
+        router.push({ pathname: "/maps/pharmacy-direction" });
+      } else {
+        Alert.alert(
+          "Location Required",
+          "Please enable location permissions to use auto search.",
+          [{ text: "OK" }],
+        );
+      }
+    } finally {
+      setTimeout(() => {
+        navigating.current = false;
+      }, 500);
     }
+  };
+
+  const handleLocationNavigate = () => {
+    if (navigating.current) return;
+    navigating.current = true;
+    router.push({
+      pathname: "/maps/pharmacy-location",
+      params: {
+        pharmacyId: pharmacy.id,
+        distance: pharmacy.distance,
+        cityName: cityName,
+        cityNameAr: cityNameAr,
+      },
+    });
+    setTimeout(() => {
+      navigating.current = false;
+    }, 500);
   };
 
   const badge = useMemo(() => {
@@ -710,17 +736,7 @@ function CardItem({
           </TouchableOpacity>
           <View style={styles.upward_divider} />
           <TouchableOpacity
-            onPress={() =>
-              router.push({
-                pathname: "/maps/pharmacy-location",
-                params: {
-                  pharmacyId: pharmacy.id,
-                  distance: pharmacy.distance,
-                  cityName: cityName,
-                  cityNameAr: cityNameAr,
-                },
-              })
-            }
+            onPress={handleLocationNavigate}
             style={styles.card_button}
           >
             <Ionicons name="map-outline" size={14} color="#3385FF" />

@@ -3,6 +3,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { getUserLocation } from "@/utils/location/getLocation";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useRef } from "react";
 import {
   Alert,
   Image,
@@ -18,18 +19,41 @@ export default function Index() {
   const router = useRouter();
   const { language } = useLanguage();
 
+  const navigating = useRef(false);
+
+  const withGuard = (action: () => void) => {
+    if (navigating.current) return;
+    navigating.current = true;
+    action();
+    setTimeout(() => {
+      navigating.current = false;
+    }, 500);
+  };
+
   const mapRedirect = async () => {
-    const loc = await getUserLocation();
-    if (loc) {
-      router.push({
-        pathname: "/maps/auto-map",
-        params: { latitude: loc.latitude, longitude: loc.longitude },
-      });
-    } else {
-      Alert.alert(text.alertTitle, text.alertMessage, [
-        { text: text.alertButton },
-      ]);
+    if (navigating.current) return;
+    navigating.current = true;
+    try {
+      const loc = await getUserLocation();
+      if (loc) {
+        router.push({
+          pathname: "/maps/auto-map",
+          params: { latitude: loc.latitude, longitude: loc.longitude },
+        });
+      } else {
+        Alert.alert(text.alertTitle, text.alertMessage, [
+          { text: text.alertButton },
+        ]);
+      }
+    } finally {
+      setTimeout(() => {
+        navigating.current = false;
+      }, 500);
     }
+  };
+
+  const handleNavigate = () => {
+    withGuard(() => router.push("/(tabs)/search/search_index"));
   };
 
   const getText = () => {
@@ -158,10 +182,7 @@ export default function Index() {
         </TouchableOpacity>
 
         {/* Manual Search */}
-        <TouchableOpacity
-          onPress={() => router.push("/(tabs)/search/search_index")}
-          activeOpacity={0.85}
-        >
+        <TouchableOpacity onPress={handleNavigate} activeOpacity={0.85}>
           <View style={styles.card}>
             <View style={styles.icon_container}>
               <Ionicons

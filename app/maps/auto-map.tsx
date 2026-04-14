@@ -501,7 +501,7 @@ const styles = StyleSheet.create({
   snackbar: {
     borderRadius: 12,
     marginHorizontal: 16,
-    marginBottom: 12,
+    marginBottom: 120,
     backgroundColor: "#1C1C1E",
   },
 });

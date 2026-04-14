@@ -3,7 +3,7 @@ import Header from "@/components/header";
 import { useLanguage } from "@/context/LanguageContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Divider, List, Switch } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -12,6 +12,16 @@ export default function Menu() {
   const { language } = useLanguage();
   const [themeMode, setThemeMode] = useState<boolean>(false);
   const router = useRouter();
+  const navigating = useRef(false);
+
+  const handleNavigate = (route: string) => {
+    if (navigating.current) return;
+    navigating.current = true;
+    router.push(route as any);
+    setTimeout(() => {
+      navigating.current = false;
+    }, 500);
+  };
 
   const getText = () => {
     if (language === "ar") {
@@ -100,7 +110,7 @@ export default function Menu() {
                   <Ionicons name="chevron-forward" size={20} color="#999" />
                 </View>
               )}
-              onPress={() => router.push("/(tabs)/menu/language")}
+              onPress={() => handleNavigate("/(tabs)/menu/language")}
               style={styles.list_item}
             />
             <Divider style={styles.item_divider} />
@@ -154,7 +164,7 @@ export default function Menu() {
                   <Ionicons name="chevron-forward" size={20} color="#999" />
                 </View>
               )}
-              onPress={() => router.push("/(tabs)/menu/privacy")}
+              onPress={() => handleNavigate("/(tabs)/menu/privacy")}
               style={styles.list_item}
             />
             <Divider style={styles.item_divider} />
@@ -175,7 +185,7 @@ export default function Menu() {
                   <Ionicons name="chevron-forward" size={20} color="#999" />
                 </View>
               )}
-              onPress={() => router.push("/(tabs)/menu/terms")}
+              onPress={() => handleNavigate("/(tabs)/menu/terms")}
               style={styles.list_item}
             />
           </View>
@@ -209,7 +219,7 @@ export default function Menu() {
                   <Ionicons name="chevron-forward" size={20} color="#999" />
                 </View>
               )}
-              onPress={() => router.push("/(tabs)/menu/about")}
+              onPress={() => handleNavigate("/(tabs)/menu/about")}
               style={styles.list_item}
             />
             <Divider style={styles.item_divider} />
@@ -226,7 +236,7 @@ export default function Menu() {
                   <Ionicons name="chevron-forward" size={20} color="#999" />
                 </View>
               )}
-              onPress={() => router.push("/menu")}
+              onPress={() => handleNavigate("/menu")}
               style={styles.list_item}
             />
             <Divider style={styles.item_divider} />
@@ -247,7 +257,7 @@ export default function Menu() {
                   <Ionicons name="chevron-forward" size={20} color="#999" />
                 </View>
               )}
-              onPress={() => router.push("/menu")}
+              onPress={() => handleNavigate("/menu")}
               style={styles.list_item}
             />
             <Divider style={styles.item_divider} />

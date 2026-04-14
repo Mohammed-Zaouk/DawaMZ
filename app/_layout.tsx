@@ -24,9 +24,20 @@ export default function RootLayout() {
 
   return (
     <LanguageProvider>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="onboarding/language_selection" />
-        <Stack.Screen name="(tabs)" />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          animation: "slide_from_right",
+          animationDuration: 200,
+          gestureEnabled: true,
+          gestureDirection: "horizontal",
+        }}
+      >
+        <Stack.Screen
+          name="onboarding/language_selection"
+          options={{ animation: "fade" }}
+        />
+        <Stack.Screen name="(tabs)" options={{ animation: "fade" }} />
         <Stack.Screen name="maps" />
       </Stack>
     </LanguageProvider>

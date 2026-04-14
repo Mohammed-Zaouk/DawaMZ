@@ -4,27 +4,52 @@ import Loading from "@/components/loading";
 import { PulseDot } from "@/components/pulse_dot";
 import { useLanguage } from "@/context/LanguageContext";
 import { supabase } from "@/services/supabase";
+import { isOpenNow } from "@/utils/isOpen";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-    FlatList,
-    Image,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { Button, Searchbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+// ─── types ─────────────────────────────────────────────────────────────────
+
+type TimeRange = { open: string; close: string };
+type DaySchedule = TimeRange[] | null;
+type Schedule = {
+  monday: DaySchedule;
+  tuesday: DaySchedule;
+  wednesday: DaySchedule;
+  thursday: DaySchedule;
+  friday: DaySchedule;
+  saturday: DaySchedule;
+  sunday: DaySchedule;
+};
+
+type PharmacyInfo = {
+  schedule: Schedule | null;
+  is_on_call: boolean;
+  duty_start: string;
+  duty_end: string;
+  is_night_pharmacy: boolean;
+};
 
 type City = {
   id: string;
   name: string;
   name_ar: string;
   image: string;
-  pharmacies: { open: boolean }[];
+  pharmacies: PharmacyInfo[];
 };
+
+// ─── page ──────────────────────────────────────────────────────────────────
 
 export default function CitiesPage() {
   const [searchCity, setSearchCity] = useState("");
@@ -38,7 +63,9 @@ export default function CitiesPage() {
       setLoading(true);
       const { data, error } = await supabase
         .from("cities")
-        .select("*, pharmacies(open)")
+        .select(
+          "*, pharmacies(schedule, is_on_call, duty_start, duty_end, is_night_pharmacy)",
+        )
         .eq("region_id", regionId);
       if (!error) setCities(data || []);
       setLoading(false);
@@ -94,9 +121,7 @@ export default function CitiesPage() {
 
   const text = getText();
 
-  if (loading) {
-    return <Loading />;
-  }
+  if (loading) return <Loading />;
 
   return (
     <SafeAreaView style={styles.screen_container}>
@@ -120,7 +145,17 @@ export default function CitiesPage() {
             name={item.name}
             image={{ uri: item.image }}
             allPharmacies={item.pharmacies.length}
-            openPharmacies={item.pharmacies.filter((p) => p.open).length}
+            openPharmacies={
+              item.pharmacies.filter((p) =>
+                isOpenNow(
+                  p.schedule,
+                  p.is_on_call ?? false,
+                  p.duty_start,
+                  p.duty_end,
+                  p.is_night_pharmacy ?? false,
+                ),
+              ).length
+            }
             language={language}
             text={text}
           />
@@ -134,6 +169,8 @@ export default function CitiesPage() {
     </SafeAreaView>
   );
 }
+
+// ─── empty state ───────────────────────────────────────────────────────────
 
 function EmptyState({
   text,
@@ -167,6 +204,8 @@ function EmptyState({
   );
 }
 
+// ─── card ──────────────────────────────────────────────────────────────────
+
 function CardItem({
   id,
   image,
@@ -187,6 +226,19 @@ function CardItem({
   text: any;
 }) {
   const router = useRouter();
+  const navigating = useRef(false);
+
+  const handleNavigate = () => {
+    if (navigating.current) return;
+    navigating.current = true;
+    router.push({
+      pathname: "/(tabs)/search/pharmacies",
+      params: { cityId: id, cityName: name, cityNameAr: nameAr },
+    });
+    setTimeout(() => {
+      navigating.current = false;
+    }, 500);
+  };
 
   return (
     <View style={styles.card}>
@@ -214,7 +266,7 @@ function CardItem({
           </View>
           <View style={styles.subtitle_dot} />
           <View style={styles.subtitle_chip}>
-            <PulseDot color={"#22c55e"} />
+            <PulseDot color="#22c55e" />
             <Text
               style={[styles.card_subtitle, styles.open_text]}
               numberOfLines={1}
@@ -228,12 +280,7 @@ function CardItem({
         <View style={styles.button_container}>
           <Button
             mode="contained"
-            onPress={() =>
-              router.push({
-                pathname: "/(tabs)/search/pharmacies",
-                params: { cityId: id, cityName: name, cityNameAr: nameAr },
-              })
-            }
+            onPress={handleNavigate}
             style={styles.card_button}
             labelStyle={styles.card_button_label}
           >
@@ -248,6 +295,8 @@ function CardItem({
     </View>
   );
 }
+
+// ─── styles ────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   screen_container: {

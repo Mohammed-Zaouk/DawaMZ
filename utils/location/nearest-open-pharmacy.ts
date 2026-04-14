@@ -1,4 +1,5 @@
 import { supabase } from "@/services/supabase";
+import { isOpenNow } from "@/utils/isOpen";
 import { calculateDistance } from "./calculateDistance";
 
 export const findNearestOpenPharmacy = async (
@@ -7,34 +8,41 @@ export const findNearestOpenPharmacy = async (
 ) => {
   const { data: pharmacies, error } = await supabase
     .from("pharmacies")
-    .select("*, cities(name, name_ar)")
-    .eq("open", true);
+    .select("*, cities(name, name_ar)");
 
   if (error || !pharmacies) {
     console.error("Failed to fetch pharmacies:", error?.message);
     return null;
   }
 
-  let nearbypharmacy = null;
+  const openPharmacies = pharmacies.filter((p) =>
+    isOpenNow(
+      p.schedule,
+      p.is_on_call ?? false,
+      p.duty_start,
+      p.duty_end,
+      p.is_night_pharmacy ?? false,
+    ),
+  );
 
-  for (const pharmacy of pharmacies) {
+  let nearest = null;
+  for (const pharmacy of openPharmacies) {
     const distance = calculateDistance(
       userLat,
       userLon,
       pharmacy.latitude,
       pharmacy.longitude,
     );
-
-    if (!nearbypharmacy || distance < nearbypharmacy.distance) {
-      nearbypharmacy = { ...pharmacy, distance };
+    if (!nearest || distance < nearest.distance) {
+      nearest = { ...pharmacy, distance };
     }
   }
 
-  if (!nearbypharmacy) return null;
+  if (!nearest) return null;
 
   return {
-    ...nearbypharmacy,
-    cityName: nearbypharmacy.cities?.name,
-    cityNameAr: nearbypharmacy.cities?.name_ar,
+    ...nearest,
+    cityName: nearest.cities?.name,
+    cityNameAr: nearest.cities?.name_ar,
   };
 };
