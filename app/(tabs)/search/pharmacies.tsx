@@ -12,7 +12,13 @@ import {
 import { getUserLocation } from "@/utils/location/getLocation";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Alert,
   FlatList,
@@ -24,6 +30,8 @@ import {
 } from "react-native";
 import { Button, Searchbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+const ITEMS_PER_PAGE = 1;
 
 type TimeRange = { open: string; close: string };
 type DaySchedule = TimeRange[] | null;
@@ -85,10 +93,17 @@ export default function PharmaciesPage() {
     Pharmacy[]
   >([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
     fetchPharmacies();
   }, []);
+
+  // Reset to page 1 whenever search or filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchParmacy, activeFilter]);
 
   const fetchPharmacies = async () => {
     setLoading(true);
@@ -127,7 +142,8 @@ export default function PharmaciesPage() {
     }
   };
 
-  const getText = () => {
+  // ── Memoized so CardItem's `text` prop stays stable between renders ──
+  const text = useMemo(() => {
     if (language === "ar") {
       return {
         openBadge: "مفتوح الآن",
@@ -160,6 +176,9 @@ export default function PharmaciesPage() {
         dutyStartsOn: (s: string) => `تبدأ المناوبة: ${s}`,
         tomorrow: "غداً",
         noPhone: "رقم الهاتف غير متوفر",
+        page: (c: number, t: number) => `${c} / ${t}`,
+        prevPage: "السابق",
+        nextPage: "التالي",
       };
     } else if (language === "fr") {
       return {
@@ -197,6 +216,9 @@ export default function PharmaciesPage() {
         dutyStartsOn: (s: string) => `Garde commence: ${s}`,
         tomorrow: "demain",
         noPhone: "Numéro non disponible",
+        page: (c: number, t: number) => `${c} / ${t}`,
+        prevPage: "Précédent",
+        nextPage: "Suivant",
       };
     } else {
       return {
@@ -231,31 +253,79 @@ export default function PharmaciesPage() {
         dutyStartsOn: (s: string) => `On call starts: ${s}`,
         tomorrow: "tomorrow",
         noPhone: "Phone number unavailable",
+        page: (c: number, t: number) => `${c} / ${t}`,
+        prevPage: "Previous",
+        nextPage: "Next",
       };
     }
-  };
+  }, [language]);
 
-  const text = getText();
-
-  const filteredPharmacies = pharmaciesWithDistance.filter((pharmacy) => {
-    const open = isOpenNow(
-      pharmacy.schedule,
-      pharmacy.is_on_call ?? false,
-      pharmacy.duty_start,
-      pharmacy.duty_end,
-      pharmacy.is_night_pharmacy ?? false,
-    );
-    if (activeFilter === "night")
-      return pharmacy.is_night_pharmacy === true && open;
-    if (activeFilter === "oncall") return pharmacy.is_on_call === true && open;
-    return open;
-  });
-
-  const filterData = filteredPharmacies.filter(
-    (pharmacy) =>
-      pharmacy.name.toLowerCase().includes(searchParmacy.toLowerCase()) ||
-      pharmacy.name_ar.includes(searchParmacy),
+  const filteredPharmacies = useMemo(
+    () =>
+      pharmaciesWithDistance.filter((pharmacy) => {
+        const open = isOpenNow(
+          pharmacy.schedule,
+          pharmacy.is_on_call ?? false,
+          pharmacy.duty_start,
+          pharmacy.duty_end,
+          pharmacy.is_night_pharmacy ?? false,
+        );
+        if (activeFilter === "night")
+          return pharmacy.is_night_pharmacy === true && open;
+        if (activeFilter === "oncall")
+          return pharmacy.is_on_call === true && open;
+        return open;
+      }),
+    [pharmaciesWithDistance, activeFilter],
   );
+
+  const filterData = useMemo(
+    () =>
+      filteredPharmacies.filter(
+        (pharmacy) =>
+          pharmacy.name.toLowerCase().includes(searchParmacy.toLowerCase()) ||
+          pharmacy.name_ar.includes(searchParmacy),
+      ),
+    [filteredPharmacies, searchParmacy],
+  );
+
+  const totalPages = Math.max(1, Math.ceil(filterData.length / ITEMS_PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+  const pagedData = useMemo(
+    () =>
+      filterData.slice(
+        (safePage - 1) * ITEMS_PER_PAGE,
+        safePage * ITEMS_PER_PAGE,
+      ),
+    [filterData, safePage, currentPage],
+  );
+
+  const handlePrevPage = useCallback(() => {
+    setCurrentPage((p) => Math.max(1, p - 1));
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    setCurrentPage((p) => Math.min(totalPages, p + 1));
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+  }, [totalPages]);
+
+  // ── Stable renderItem — won't change unless deps change ──
+  const renderItem = useCallback(
+    ({ item }: { item: Pharmacy }) => (
+      <CardItem
+        pharmacy={item}
+        cityName={cityName as string}
+        cityNameAr={cityNameAr as string}
+        language={language}
+        text={text}
+      />
+    ),
+    [cityName, cityNameAr, language, text],
+  );
+
+  // ── Stable keyExtractor ──
+  const keyExtractor = useCallback((item: Pharmacy) => item.id, []);
 
   if (loading) return <Loading />;
 
@@ -345,19 +415,15 @@ export default function PharmaciesPage() {
       </View>
 
       <FlatList
-        data={filterData}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <CardItem
-            pharmacy={item}
-            cityName={cityName as string}
-            cityNameAr={cityNameAr as string}
-            language={language}
-            text={text}
-          />
-        )}
+        ref={flatListRef}
+        data={pagedData}
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
         contentContainerStyle={styles.list_container}
         showsVerticalScrollIndicator={false}
+        initialNumToRender={8}
+        maxToRenderPerBatch={5}
+        windowSize={5}
         ListEmptyComponent={
           <EmptyState
             text={text}
@@ -366,7 +432,99 @@ export default function PharmaciesPage() {
           />
         }
       />
+
+      {/* Pagination pinned at the bottom, outside FlatList */}
+      {filterData.length > ITEMS_PER_PAGE && (
+        <Pagination
+          currentPage={safePage}
+          totalPages={totalPages}
+          onPrev={handlePrevPage}
+          onNext={handleNextPage}
+          label={text.page(safePage, totalPages)}
+          prevLabel={text.prevPage}
+          nextLabel={text.nextPage}
+        />
+      )}
     </SafeAreaView>
+  );
+}
+
+// ─── pagination ────────────────────────────────────────────────────────────
+
+function Pagination({
+  currentPage,
+  totalPages,
+  onPrev,
+  onNext,
+  label,
+  prevLabel,
+  nextLabel,
+}: {
+  currentPage: number;
+  totalPages: number;
+  onPrev: () => void;
+  onNext: () => void;
+  label: string;
+  prevLabel: string;
+  nextLabel: string;
+}) {
+  return (
+    <View style={styles.pagination_container}>
+      <TouchableOpacity
+        onPress={onPrev}
+        disabled={currentPage === 1}
+        style={[
+          styles.pagination_button,
+          currentPage === 1 && styles.pagination_button_disabled,
+        ]}
+        activeOpacity={0.7}
+      >
+        <Ionicons
+          name="chevron-back"
+          size={16}
+          color={currentPage === 1 ? "rgba(255,255,255,0.3)" : "#FFFFFF"}
+        />
+        <Text
+          style={[
+            styles.pagination_button_text,
+            currentPage === 1 && styles.pagination_button_text_disabled,
+          ]}
+        >
+          {prevLabel}
+        </Text>
+      </TouchableOpacity>
+
+      <View style={styles.pagination_label_wrap}>
+        <Text style={styles.pagination_label}>{label}</Text>
+      </View>
+
+      <TouchableOpacity
+        onPress={onNext}
+        disabled={currentPage === totalPages}
+        style={[
+          styles.pagination_button,
+          currentPage === totalPages && styles.pagination_button_disabled,
+        ]}
+        activeOpacity={0.7}
+      >
+        <Text
+          style={[
+            styles.pagination_button_text,
+            currentPage === totalPages &&
+              styles.pagination_button_text_disabled,
+          ]}
+        >
+          {nextLabel}
+        </Text>
+        <Ionicons
+          name="chevron-forward"
+          size={16}
+          color={
+            currentPage === totalPages ? "rgba(255,255,255,0.3)" : "#FFFFFF"
+          }
+        />
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -428,7 +586,7 @@ function EmptyState({
 
 // ─── card ──────────────────────────────────────────────────────────────────
 
-function CardItem({
+const CardItem = React.memo(function CardItem({
   pharmacy,
   cityName,
   cityNameAr,
@@ -507,7 +665,7 @@ function CardItem({
     if (isOpen)
       return { label: text.openBadge, color: "#22c55e", dot: "#22c55e" };
     return { label: text.closedBadge, color: "#ef4444", dot: "#ef4444" };
-  }, [status]);
+  }, [status, isOpen, text]);
 
   const scheduleRow = useMemo(() => {
     switch (status.type) {
@@ -566,7 +724,7 @@ function CardItem({
           bg: "#EEF4FF",
         };
     }
-  }, [status, language]);
+  }, [status, language, text]);
 
   const showDutyPeriod =
     (pharmacy.is_on_call || pharmacy.is_night_pharmacy) &&
@@ -578,7 +736,7 @@ function CardItem({
     if (status.type === "open" && status.closingSoon && status.nextSlot)
       return text.lunchReopens(status.nextSlot.open);
     return null;
-  }, [status]);
+  }, [status, text]);
 
   return (
     <View style={styles.card}>
@@ -746,7 +904,9 @@ function CardItem({
       </View>
     </View>
   );
-}
+});
+
+// ─── styles ────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   // Screen
@@ -799,6 +959,57 @@ const styles = StyleSheet.create({
   },
   list_container: {
     gap: 15,
+    paddingBottom: 8,
+  },
+  // Pagination — pinned bar at the bottom of the screen
+  pagination_container: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderRadius: 16,
+    marginBottom: 4,
+  },
+  pagination_button: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.25)",
+    minWidth: 100,
+    justifyContent: "center",
+  },
+  pagination_button_disabled: {
+    backgroundColor: "rgba(255,255,255,0.07)",
+    borderColor: "rgba(255,255,255,0.1)",
+  },
+  pagination_button_text: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#FFFFFF",
+    letterSpacing: 0.3,
+  },
+  pagination_button_text_disabled: {
+    color: "rgba(255,255,255,0.3)",
+  },
+  pagination_label_wrap: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+    minWidth: 64,
+    alignItems: "center",
+  },
+  pagination_label: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#FFFFFF",
+    letterSpacing: 0.5,
   },
   // Card
   card: {
