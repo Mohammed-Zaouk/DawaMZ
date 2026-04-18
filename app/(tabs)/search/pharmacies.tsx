@@ -31,7 +31,7 @@ import {
 import { Button, Searchbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const ITEMS_PER_PAGE = 1;
+const ITEMS_PER_PAGE = 15;
 
 type TimeRange = { open: string; close: string };
 type DaySchedule = TimeRange[] | null;
@@ -967,7 +967,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     borderRadius: 16,
-    marginBottom: 4,
+    marginBottom: -10,
   },
   pagination_button: {
     flexDirection: "row",
