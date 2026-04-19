@@ -2,6 +2,7 @@ import BackgroundBubbles from "@/components/background_bubbles";
 import Divider from "@/components/divider_line";
 import Loading from "@/components/loading";
 import { useLanguage } from "@/context/LanguageContext";
+import { useTheme } from "@/context/ThemeContext";
 import { supabase } from "@/services/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -15,6 +16,7 @@ export default function SearchIndex() {
   const [regions, setRegions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { language } = useLanguage();
+  const { theme } = useTheme();
 
   const getText = () => {
     if (language === "ar")
@@ -83,19 +85,31 @@ export default function SearchIndex() {
   }
 
   return (
-    <SafeAreaView style={styles.screen_container}>
+    <SafeAreaView
+      style={[styles.screen_container, { backgroundColor: theme.screenBg }]}
+    >
       <BackgroundBubbles />
       <Searchbar
         placeholder={text.search}
         onChangeText={setSearchRegion}
         value={searchRegion}
-        style={styles.search_bar}
+        style={[
+          styles.search_bar,
+          {
+            backgroundColor: theme.searchBarBg,
+            borderColor: theme.searchBarBorder,
+          },
+        ]}
         keyboardType="default"
         textContentType="none"
         autoCorrect={false}
         iconColor="#2196F3"
-        placeholderTextColor="#a0b4c8"
-        inputStyle={{ color: "#1a3a6e", fontSize: 16, paddingBottom: 9 }}
+        placeholderTextColor={theme.searchBarPlaceholder}
+        inputStyle={{
+          color: theme.searchBarText,
+          fontSize: 16,
+          paddingBottom: 9,
+        }}
       />
       <FlatList
         data={filterData}
@@ -110,6 +124,7 @@ export default function SearchIndex() {
             cities={item.cities}
             language={language}
             text={text}
+            theme={theme}
           />
         )}
         contentContainerStyle={styles.list_container}
@@ -161,6 +176,7 @@ function CardItem({
   cities,
   language,
   text,
+  theme,
 }: {
   id: string;
   name: string;
@@ -170,6 +186,7 @@ function CardItem({
   cities: { name: string; name_ar: string }[];
   language: string | null;
   text: any;
+  theme: any;
 }) {
   const router = useRouter();
   const navigating = useRef(false);
@@ -190,14 +207,23 @@ function CardItem({
   const citiesArText = cities?.map((c) => c.name_ar).join(" - ");
 
   return (
-    <View style={styles.card}>
+    <View
+      style={[
+        styles.card,
+        { backgroundColor: theme.card, borderColor: theme.sideLine },
+      ]}
+    >
       <View style={styles.card_content}>
-        <Text style={styles.card_title} numberOfLines={1} ellipsizeMode="tail">
+        <Text
+          style={[styles.card_title, { color: theme.text }]}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
           {language === "ar" ? name_ar : language === "fr" ? name : name_en}
         </Text>
         <Divider style={styles.divider} />
         <Text
-          style={styles.card_subtitle}
+          style={[styles.card_subtitle, { color: theme.itemDescription }]}
           numberOfLines={1}
           ellipsizeMode="tail"
         >
@@ -227,28 +253,54 @@ function CardItem({
 }
 
 const styles = StyleSheet.create({
+  // Screen
   screen_container: {
     flex: 1,
-    backgroundColor: "#2196F3",
     gap: 20,
     paddingHorizontal: 10,
     paddingTop: 15,
   },
+  // Search Bar
   search_bar: {
-    backgroundColor: "#FFFFFF",
     elevation: 0,
     shadowOpacity: 0,
     borderRadius: 30,
     borderWidth: 1.5,
-    borderColor: "rgba(33, 150, 243, 0.2)",
   },
+  // List
   list_container: {
     gap: 15,
   },
+  // Empty State
+  empty_container: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 60,
+  },
+  empty_icon_wrapper: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+  },
+  empty_title: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#ffffff",
+    letterSpacing: 0.2,
+  },
+  empty_subtitle: {
+    fontSize: 13,
+    color: "rgba(255, 255, 255, 0.7)",
+    fontWeight: "400",
+  },
+  // Card
   card: {
     flexDirection: "row",
     justifyContent: "flex-end",
-    backgroundColor: "#FFFFFF",
     borderRadius: 20,
     overflow: "hidden",
     elevation: 6,
@@ -257,7 +309,6 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 5 },
     borderWidth: 1,
-    borderColor: "rgba(33, 150, 243, 0.1)",
   },
   card_content: {
     flex: 1,
@@ -268,7 +319,6 @@ const styles = StyleSheet.create({
   card_title: {
     fontSize: 16.4,
     fontWeight: "700",
-    color: "#274796",
     textAlign: "right",
     writingDirection: "rtl",
     flexShrink: 1,
@@ -278,7 +328,6 @@ const styles = StyleSheet.create({
   },
   card_subtitle: {
     fontSize: 12.6,
-    color: "#888888",
     textAlign: "right",
     writingDirection: "rtl",
     flexShrink: 1,
@@ -310,30 +359,5 @@ const styles = StyleSheet.create({
   card_image: {
     height: 110,
     width: 110,
-  },
-  empty_container: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 60,
-  },
-  empty_icon_wrapper: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 10,
-  },
-  empty_title: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#ffffff",
-    letterSpacing: 0.2,
-  },
-  empty_subtitle: {
-    fontSize: 13,
-    color: "rgba(255, 255, 255, 0.7)",
-    fontWeight: "400",
   },
 });

@@ -3,6 +3,7 @@ import Divider from "@/components/divider_line";
 import Loading from "@/components/loading";
 import { PulseDot } from "@/components/pulse_dot";
 import { useLanguage } from "@/context/LanguageContext";
+import { useTheme } from "@/context/ThemeContext";
 import { supabase } from "@/services/supabase";
 import { getScheduleStatus, isOpenNow, ScheduleStatus } from "@/utils/isOpen";
 import {
@@ -87,6 +88,7 @@ const getTodayLabel = (language: string | null) => {
 export default function PharmaciesPage() {
   const [searchParmacy, setSearchParmacy] = useState("");
   const { language } = useLanguage();
+  const { theme } = useTheme();
   const [activeFilter, setActiveFilter] = useState("all");
   const { cityId, cityName, cityNameAr } = useLocalSearchParams();
   const [pharmaciesWithDistance, setPharmaciesWithDistance] = useState<
@@ -310,7 +312,6 @@ export default function PharmaciesPage() {
     flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
   }, [totalPages]);
 
-  // ── Stable renderItem — won't change unless deps change ──
   const renderItem = useCallback(
     ({ item }: { item: Pharmacy }) => (
       <CardItem
@@ -319,27 +320,39 @@ export default function PharmaciesPage() {
         cityNameAr={cityNameAr as string}
         language={language}
         text={text}
+        theme={theme}
       />
     ),
-    [cityName, cityNameAr, language, text],
+    [cityName, cityNameAr, language, text, theme],
   );
 
-  // ── Stable keyExtractor ──
   const keyExtractor = useCallback((item: Pharmacy) => item.id, []);
 
   if (loading) return <Loading />;
 
   return (
-    <SafeAreaView style={styles.screen_container}>
+    <SafeAreaView
+      style={[styles.screen_container, { backgroundColor: theme.screenBg }]}
+    >
       <BackgroundBubbles />
       <Searchbar
         placeholder={text.search}
         onChangeText={setSearchParmacy}
         value={searchParmacy}
-        style={styles.search_bar}
+        style={[
+          styles.search_bar,
+          {
+            backgroundColor: theme.searchBarBg,
+            borderColor: theme.searchBarBorder,
+          },
+        ]}
         iconColor="#2196F3"
-        placeholderTextColor="#a0b4c8"
-        inputStyle={{ color: "#1a3a6e", fontSize: 16, paddingBottom: 9 }}
+        placeholderTextColor={theme.searchBarPlaceholder}
+        inputStyle={{
+          color: theme.searchBarText,
+          fontSize: 16,
+          paddingBottom: 9,
+        }}
       />
 
       <View style={styles.filter_bar_wrapper}>
@@ -348,70 +361,50 @@ export default function PharmaciesPage() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.filter_bar}
         >
-          <Button
-            mode="contained"
-            onPress={() => setActiveFilter("all")}
-            style={[
-              styles.filter_button,
-              activeFilter === "all" && styles.filter_button_active,
-            ]}
-            textColor={activeFilter === "all" ? "#FFFFFF" : "#1A73E8"}
-            buttonColor={activeFilter === "all" ? "#1A73E8" : "#FFFFFF"}
-            icon={() => (
-              <Ionicons
-                name="grid-outline"
-                size={16}
-                color={activeFilter === "all" ? "#FFFFFF" : "#1A73E8"}
-              />
-            )}
-          >
-            {text.filterAll}
-          </Button>
-          <Button
-            mode="contained"
-            onPress={() => setActiveFilter("night")}
-            style={[
-              styles.filter_button,
-              activeFilter === "night" && styles.filter_button_active,
-            ]}
-            textColor={activeFilter === "night" ? "#FFFFFF" : "#1A73E8"}
-            buttonColor={activeFilter === "night" ? "#1A73E8" : "#FFFFFF"}
-            icon={() => (
-              <Ionicons
-                name="moon-outline"
-                size={16}
-                color={activeFilter === "night" ? "#FFFFFF" : "#1A73E8"}
-              />
-            )}
-          >
-            {text.filterNight}
-          </Button>
-          <Button
-            mode="contained"
-            onPress={() => setActiveFilter("oncall")}
-            style={[
-              styles.filter_button,
-              activeFilter === "oncall" && styles.filter_button_active,
-            ]}
-            textColor={activeFilter === "oncall" ? "#FFFFFF" : "#1A73E8"}
-            buttonColor={activeFilter === "oncall" ? "#1A73E8" : "#FFFFFF"}
-            icon={() => (
-              <Ionicons
-                name="call-outline"
-                size={16}
-                color={activeFilter === "oncall" ? "#FFFFFF" : "#1A73E8"}
-              />
-            )}
-          >
-            {text.filterOnCall}
-          </Button>
+          {(["all", "night", "oncall"] as const).map((filter) => {
+            const isActive = activeFilter === filter;
+            const iconName =
+              filter === "all"
+                ? "grid-outline"
+                : filter === "night"
+                  ? "moon-outline"
+                  : "call-outline";
+            const label =
+              filter === "all"
+                ? text.filterAll
+                : filter === "night"
+                  ? text.filterNight
+                  : text.filterOnCall;
+            return (
+              <Button
+                key={filter}
+                mode="contained"
+                onPress={() => setActiveFilter(filter)}
+                style={[
+                  styles.filter_button,
+                  isActive && styles.filter_button_active,
+                ]}
+                textColor={isActive ? "#FFFFFF" : theme.sectionHeader}
+                buttonColor={isActive ? "#1A73E8" : theme.card}
+                icon={() => (
+                  <Ionicons
+                    name={iconName}
+                    size={16}
+                    color={isActive ? "#FFFFFF" : theme.sectionHeader}
+                  />
+                )}
+              >
+                {label}
+              </Button>
+            );
+          })}
         </ScrollView>
       </View>
 
       <View style={styles.date_strip}>
-        <View style={styles.side_line} />
+        <View style={[styles.side_line, { backgroundColor: theme.sideLine }]} />
         <Text style={styles.date_strip_text}>{getTodayLabel(language)}</Text>
-        <View style={styles.side_line} />
+        <View style={[styles.side_line, { backgroundColor: theme.sideLine }]} />
       </View>
 
       <FlatList
@@ -592,12 +585,14 @@ const CardItem = React.memo(function CardItem({
   cityNameAr,
   language,
   text,
+  theme,
 }: {
   pharmacy: Pharmacy;
   cityName: string;
   cityNameAr: string;
   language: string | null;
   text: any;
+  theme: any;
 }) {
   const router = useRouter();
   const navigating = useRef(false);
@@ -739,7 +734,7 @@ const CardItem = React.memo(function CardItem({
   }, [status, text]);
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: theme.card }]}>
       <View style={styles.card_content}>
         {/* header */}
         <View style={styles.card_header}>
@@ -750,18 +745,43 @@ const CardItem = React.memo(function CardItem({
             </Text>
           </View>
           <View style={styles.title_row}>
+            // Pills — replace pill_night and pill_oncall styles:
             {pharmacy.is_night_pharmacy && (
-              <View style={[styles.type_pill, styles.pill_night]}>
-                <Text style={styles.pill_night_text}>{text.nightLabel}</Text>
+              <View
+                style={[
+                  styles.type_pill,
+                  { backgroundColor: theme.pillNightBg },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.pill_oncall_text,
+                    { color: theme.pillNightText },
+                  ]}
+                >
+                  {text.nightLabel}
+                </Text>
               </View>
             )}
             {pharmacy.is_on_call && (
-              <View style={[styles.type_pill, styles.pill_oncall]}>
-                <Text style={styles.pill_oncall_text}>{text.dutyLabel}</Text>
+              <View
+                style={[
+                  styles.type_pill,
+                  { backgroundColor: theme.pillOnCallBg },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.pill_oncall_text,
+                    { color: theme.pillOnCallText },
+                  ]}
+                >
+                  {text.dutyLabel}
+                </Text>
               </View>
             )}
             <Text
-              style={styles.card_title}
+              style={[styles.card_title, { color: theme.text }]}
               numberOfLines={1}
               ellipsizeMode="tail"
             >
@@ -776,13 +796,18 @@ const CardItem = React.memo(function CardItem({
         <View style={styles.info_container}>
           <View style={styles.info_row}>
             <Text
-              style={styles.info_text}
+              style={[styles.info_text, { color: theme.itemDescription }]}
               numberOfLines={1}
               ellipsizeMode="tail"
             >
               {language === "ar" ? pharmacy.address_ar : pharmacy.address}
             </Text>
-            <View style={styles.info_icon_wrap}>
+            <View
+              style={[
+                styles.info_icon_wrap,
+                { backgroundColor: theme.cardIcon },
+              ]}
+            >
               <Ionicons name="location-outline" size={13} color="#3385FF" />
             </View>
           </View>
@@ -791,6 +816,7 @@ const CardItem = React.memo(function CardItem({
             <Text
               style={[
                 styles.info_text,
+                { color: theme.itemDescription },
                 !pharmacy.phone && styles.info_text_unavailable,
               ]}
               numberOfLines={1}
@@ -798,7 +824,12 @@ const CardItem = React.memo(function CardItem({
             >
               {pharmacy.phone ?? text.noPhone}
             </Text>
-            <View style={styles.info_icon_wrap}>
+            <View
+              style={[
+                styles.info_icon_wrap,
+                { backgroundColor: theme.cardIcon },
+              ]}
+            >
               <Ionicons name="call-outline" size={13} color="#3385FF" />
             </View>
           </View>
@@ -809,6 +840,7 @@ const CardItem = React.memo(function CardItem({
             <Text
               style={[
                 styles.info_text,
+                { color: theme.itemDescription },
                 !pharmacy.distance && styles.info_text_unavailable,
               ]}
               numberOfLines={1}
@@ -818,7 +850,12 @@ const CardItem = React.memo(function CardItem({
                 ? formatDistance(pharmacy.distance)
                 : text.locationPermission}
             </Text>
-            <View style={styles.info_icon_wrap}>
+            <View
+              style={[
+                styles.info_icon_wrap,
+                { backgroundColor: theme.cardIcon },
+              ]}
+            >
               <Ionicons name="walk-outline" size={13} color="#3385FF" />
             </View>
           </View>
@@ -875,7 +912,12 @@ const CardItem = React.memo(function CardItem({
 
           {/* warning banner */}
           {warningBanner && (
-            <View style={styles.warning_banner}>
+            <View
+              style={[
+                styles.warning_banner,
+                { backgroundColor: theme.cardIcon },
+              ]}
+            >
               <Text style={styles.warning_banner_text}>{warningBanner}</Text>
               <Ionicons
                 name="information-circle-outline"
@@ -887,18 +929,43 @@ const CardItem = React.memo(function CardItem({
         </View>
 
         {/* action buttons */}
-        <View style={styles.button_container}>
+        <View
+          style={[
+            styles.button_container,
+            {
+              backgroundColor: theme.cardIcon,
+              borderColor: theme.cardButtonBorder, // ← was theme.headerBg
+            },
+          ]}
+        >
           <TouchableOpacity onPress={mapRedirect} style={styles.card_button}>
-            <Ionicons name="navigate-outline" size={14} color="#3385FF" />
-            <Text style={styles.button_text}>{text.directionsButton}</Text>
+            <Ionicons
+              name="navigate-outline"
+              size={14}
+              color={theme.cardButtonText}
+            />
+            <Text style={[styles.button_text, { color: theme.cardButtonText }]}>
+              {text.directionsButton}
+            </Text>
           </TouchableOpacity>
-          <View style={styles.upward_divider} />
+          <View
+            style={[
+              styles.upward_divider,
+              { backgroundColor: theme.cardButtonDivider },
+            ]}
+          />
           <TouchableOpacity
             onPress={handleLocationNavigate}
             style={styles.card_button}
           >
-            <Ionicons name="map-outline" size={14} color="#3385FF" />
-            <Text style={styles.button_text}>{text.locationButton}</Text>
+            <Ionicons
+              name="map-outline"
+              size={14}
+              color={theme.cardButtonText}
+            />
+            <Text style={[styles.button_text, { color: theme.cardButtonText }]}>
+              {text.locationButton}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -912,35 +979,17 @@ const styles = StyleSheet.create({
   // Screen
   screen_container: {
     flex: 1,
-    backgroundColor: "#2196F3",
     gap: 15,
     paddingHorizontal: 10,
     paddingTop: 15,
   },
-  date_strip: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 5,
-  },
-  side_line: {
-    height: 1,
-    backgroundColor: "rgba(255,255,255,0.35)",
-    flex: 1,
-  },
-  date_strip_text: {
-    fontSize: 12,
-    color: "rgba(255,255,255,0.75)",
-    fontWeight: "500",
-    letterSpacing: 0.3,
-  },
   search_bar: {
-    backgroundColor: "#FFFFFF",
     elevation: 0,
     shadowOpacity: 0,
     borderRadius: 30,
     borderWidth: 1.5,
-    borderColor: "rgba(33, 150, 243, 0.2)",
   },
+
   // Filter
   filter_bar_wrapper: {
     height: 50,
@@ -957,11 +1006,31 @@ const styles = StyleSheet.create({
   filter_button_active: {
     borderColor: "#1A73E8",
   },
+
+  // Date strip
+  date_strip: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 5,
+  },
+  side_line: {
+    height: 1,
+    flex: 1,
+  },
+  date_strip_text: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.75)",
+    fontWeight: "500",
+    letterSpacing: 0.3,
+  },
+
+  // List
   list_container: {
     gap: 15,
     paddingBottom: 8,
   },
-  // Pagination — pinned bar at the bottom of the screen
+
+  // Pagination
   pagination_container: {
     flexDirection: "row",
     alignItems: "center",
@@ -1011,9 +1080,9 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     letterSpacing: 0.5,
   },
+
   // Card
   card: {
-    backgroundColor: "#FFFFFF",
     borderRadius: 16,
     padding: 12,
     elevation: 2,
@@ -1031,6 +1100,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 3,
   },
+  badge_container: { flexDirection: "row", alignItems: "center", gap: 5 },
+  badge_text: { fontSize: 11.5, fontWeight: "500" },
   title_row: {
     flexDirection: "row",
     alignItems: "center",
@@ -1039,27 +1110,23 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     marginLeft: 8,
   },
-  card_title: {
-    fontSize: 17.3,
-    fontWeight: "700",
-    color: "#274796",
-    textAlign: "right",
-    writingDirection: "rtl",
-    flexShrink: 1,
-  },
   type_pill: {
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 50,
     flexShrink: 0,
   },
-  pill_night: { backgroundColor: "#EEEDFE" },
-  pill_night_text: { fontSize: 10, color: "#534AB7", fontWeight: "600" },
-  pill_oncall: { backgroundColor: "#E1F5EE" },
   pill_oncall_text: { fontSize: 10, color: "#0F6E56", fontWeight: "600" },
-  badge_container: { flexDirection: "row", alignItems: "center", gap: 5 },
-  badge_text: { fontSize: 11.5, fontWeight: "500" },
+  card_title: {
+    fontSize: 17.3,
+    fontWeight: "700",
+    textAlign: "right",
+    writingDirection: "rtl",
+    flexShrink: 1,
+  },
   divider: { marginVertical: 7 },
+
+  // Info rows
   info_container: { gap: 7 },
   info_row: {
     flexDirection: "row",
@@ -1070,7 +1137,6 @@ const styles = StyleSheet.create({
   info_text: {
     fontSize: 15,
     paddingLeft: 25,
-    color: "#828282",
     textAlign: "right",
     writingDirection: "rtl",
   },
@@ -1078,20 +1144,17 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 6,
-    backgroundColor: "#EEF4FF",
     alignItems: "center",
     justifyContent: "center",
   },
   info_text_unavailable: {
     fontStyle: "italic",
-    color: "#828282",
   },
   warning_banner: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-end",
     gap: 6,
-    backgroundColor: "#EEF4FF",
     borderRadius: 8,
     paddingVertical: 5,
     paddingHorizontal: 8,
@@ -1102,20 +1165,18 @@ const styles = StyleSheet.create({
     color: "#3385FF",
     fontWeight: "500",
   },
+
   // Buttons
   button_container: {
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
-    backgroundColor: "#F0F6FF",
     borderRadius: 12,
     marginTop: 10,
     height: 44,
     borderWidth: 1,
-    borderColor: "#DBEAFE",
   },
   upward_divider: {
-    backgroundColor: "#DBEAFE",
     width: 1,
     height: 30,
   },
@@ -1127,6 +1188,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   button_text: { fontSize: 13, color: "#3385FF" },
+
+  // Empty state
   empty_container: {
     alignItems: "center",
     justifyContent: "center",

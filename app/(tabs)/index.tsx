@@ -1,5 +1,6 @@
 import BackgroundBubbles from "@/components/background_bubbles";
 import { useLanguage } from "@/context/LanguageContext";
+import { useTheme } from "@/context/ThemeContext";
 import { getUserLocation } from "@/utils/location/getLocation";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -18,6 +19,7 @@ import Divider from "../../components/divider_line";
 export default function Index() {
   const router = useRouter();
   const { language } = useLanguage();
+  const { theme } = useTheme();
 
   const navigating = useRef(false);
 
@@ -105,7 +107,9 @@ export default function Index() {
   const text = getText();
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.screenBg }]}
+    >
       <BackgroundBubbles />
 
       {/* Logo */}
@@ -121,32 +125,37 @@ export default function Index() {
 
       {/* Header */}
       <View style={styles.header_section}>
-        <View style={styles.side_line} />
+        <View style={[styles.side_line, { backgroundColor: theme.sideLine }]} />
         <View style={styles.header_text}>
           <Text
-            style={styles.page_title}
+            style={[styles.page_title, { color: theme.pageTitle }]}
             numberOfLines={1}
             ellipsizeMode="tail"
           >
             {text.title}
           </Text>
           <Text
-            style={styles.page_subtitle}
+            style={[styles.page_subtitle, { color: theme.pageSubtitle }]}
             numberOfLines={1}
             ellipsizeMode="tail"
           >
             {text.subtitle}
           </Text>
         </View>
-        <View style={styles.side_line} />
+        <View style={[styles.side_line, { backgroundColor: theme.sideLine }]} />
       </View>
 
       {/* Search Cards */}
       <View style={styles.cards_container}>
         {/* Auto Search */}
         <TouchableOpacity onPress={mapRedirect} activeOpacity={0.85}>
-          <View style={styles.card}>
-            <View style={styles.icon_container}>
+          <View style={[styles.card, { backgroundColor: theme.card }]}>
+            <View
+              style={[
+                styles.icon_container,
+                { backgroundColor: theme.cardIcon },
+              ]}
+            >
               <Ionicons
                 name="locate"
                 size={28}
@@ -157,7 +166,7 @@ export default function Index() {
             <View style={styles.card_text}>
               <View style={styles.title_row}>
                 <Text
-                  style={styles.card_title}
+                  style={[styles.card_title, { color: theme.text }]}
                   numberOfLines={1}
                   ellipsizeMode="tail"
                 >
@@ -170,21 +179,26 @@ export default function Index() {
               </View>
               <Divider style={{ marginVertical: 3 }} />
               <Text
-                style={styles.card_subtitle}
+                style={[styles.card_subtitle, { color: theme.subtext }]}
                 numberOfLines={1}
                 ellipsizeMode="tail"
               >
                 {text.autoSubtitle}
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#B0C8E8" />
+            <Ionicons name="chevron-forward" size={18} color={theme.chevron} />
           </View>
         </TouchableOpacity>
 
         {/* Manual Search */}
         <TouchableOpacity onPress={handleNavigate} activeOpacity={0.85}>
-          <View style={styles.card}>
-            <View style={styles.icon_container}>
+          <View style={[styles.card, { backgroundColor: theme.card }]}>
+            <View
+              style={[
+                styles.icon_container,
+                { backgroundColor: theme.cardIcon },
+              ]}
+            >
               <Ionicons
                 name="map-outline"
                 size={26}
@@ -193,11 +207,15 @@ export default function Index() {
               />
             </View>
             <View style={styles.card_text}>
-              <Text style={styles.card_title}>{text.manualTitle}</Text>
+              <Text style={[styles.card_title, { color: theme.text }]}>
+                {text.manualTitle}
+              </Text>
               <Divider style={{ marginVertical: 3 }} />
-              <Text style={styles.card_subtitle}>{text.manualSubtitle}</Text>
+              <Text style={[styles.card_subtitle, { color: theme.subtext }]}>
+                {text.manualSubtitle}
+              </Text>
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#B0C8E8" />
+            <Ionicons name="chevron-forward" size={18} color={theme.chevron} />
           </View>
         </TouchableOpacity>
       </View>
@@ -206,10 +224,9 @@ export default function Index() {
 }
 
 const styles = StyleSheet.create({
-  // Screen
+  // SafeAreaView
   container: {
     flex: 1,
-    backgroundColor: "#2196F3",
     alignItems: "center",
     justifyContent: "flex-start",
     padding: 20,
@@ -246,7 +263,6 @@ const styles = StyleSheet.create({
   },
   side_line: {
     height: 1,
-    backgroundColor: "rgba(255,255,255,0.35)",
     flex: 1,
   },
   header_text: {
@@ -255,12 +271,10 @@ const styles = StyleSheet.create({
   page_title: {
     fontSize: 21,
     fontWeight: "semibold",
-    color: "#EAF3FF",
     textAlign: "center",
   },
   page_subtitle: {
     fontSize: 13,
-    color: "#D9DEE3",
     textAlign: "center",
     opacity: 0.85,
   },
@@ -277,7 +291,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 12,
     borderRadius: 18,
-    backgroundColor: "#FFFFFF",
     gap: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -287,7 +300,6 @@ const styles = StyleSheet.create({
   },
   icon_container: {
     borderRadius: 14,
-    backgroundColor: "#EEF5FF",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -304,15 +316,11 @@ const styles = StyleSheet.create({
   card_title: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#1A3A5C",
   },
   card_subtitle: {
     fontSize: 12,
-    color: "#666666",
     lineHeight: 17,
   },
-
-  // Auto badge
   auto_badge: {
     flexDirection: "row",
     alignItems: "center",

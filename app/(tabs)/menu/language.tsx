@@ -1,6 +1,7 @@
 import BackgroundBubbles from "@/components/background_bubbles";
 import Header from "@/components/header";
 import { useLanguage } from "@/context/LanguageContext";
+import { useTheme } from "@/context/ThemeContext";
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -9,6 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Language() {
   const { language, setLanguage } = useLanguage();
+  const { theme } = useTheme();
   const [selectedLanguage, setSelectedLanguage] = useState(language);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const router = useRouter();
@@ -54,20 +56,38 @@ export default function Language() {
   ] as const;
 
   return (
-    <SafeAreaView style={styles.screen_container}>
+    <SafeAreaView
+      style={[styles.screen_container, { backgroundColor: theme.screenBg }]}
+    >
       <BackgroundBubbles />
       <Header />
 
-      <View style={styles.content_container}>
+      <View
+        style={[styles.content_container, { backgroundColor: theme.contentBg }]}
+      >
         <View style={styles.title_section}>
           <View style={styles.title_divider_row}>
-            <View style={styles.title_line} />
+            <View
+              style={[styles.title_line, { backgroundColor: theme.sideLine }]}
+            />
             <View style={styles.title_text_block}>
-              <Text style={styles.title_arabic}>اختر اللغة</Text>
-              <Text style={styles.title_main}>Choose Your Language</Text>
-              <Text style={styles.title_sub}>Choisissez la langue</Text>
+              <Text
+                style={[styles.title_arabic, { color: theme.itemDescription }]}
+              >
+                اختر اللغة
+              </Text>
+              <Text style={[styles.title_main, { color: theme.itemTitle }]}>
+                Choose Your Language
+              </Text>
+              <Text
+                style={[styles.title_sub, { color: theme.itemDescription }]}
+              >
+                Choisissez la langue
+              </Text>
             </View>
-            <View style={styles.title_line} />
+            <View
+              style={[styles.title_line, { backgroundColor: theme.sideLine }]}
+            />
           </View>
         </View>
 
@@ -80,7 +100,11 @@ export default function Language() {
                 onPress={() => setSelectedLanguage(lang.code)}
                 style={[
                   styles.language_row,
-                  isSelected && styles.language_row_selected,
+                  { backgroundColor: theme.card, borderColor: "transparent" },
+                  isSelected && {
+                    borderColor: theme.selectedBorder,
+                    backgroundColor: theme.selectedBg,
+                  },
                 ]}
                 activeOpacity={0.75}
               >
@@ -88,7 +112,8 @@ export default function Language() {
                 <Text
                   style={[
                     styles.language_name,
-                    isSelected && styles.language_name_selected,
+                    { color: theme.text },
+                    isSelected && { color: theme.selectedText },
                   ]}
                 >
                   {lang.nativeName}
@@ -96,13 +121,18 @@ export default function Language() {
                 <View
                   style={[
                     styles.language_badge,
-                    isSelected && styles.language_badge_selected,
+                    { backgroundColor: theme.cardIcon },
+                    isSelected && { backgroundColor: theme.selectedBg },
                   ]}
                 >
                   <Text
                     style={[
                       styles.language_badge_text,
-                      isSelected && styles.language_badge_text_selected,
+                      { color: theme.itemDescription },
+                      isSelected && {
+                        color: theme.selectedText,
+                        fontWeight: "600",
+                      },
                     ]}
                   >
                     {lang.label}
@@ -120,8 +150,8 @@ export default function Language() {
             style={styles.save_button}
             contentStyle={styles.save_button_content}
             labelStyle={styles.save_button_label}
-            buttonColor="#2196F3"
-            textColor="#FFFFFF"
+            buttonColor={theme.buttonBackground}
+            textColor={theme.buttonTextColor}
             disabled={!selectedLanguage || isLoading}
             loading={isLoading}
           >
@@ -134,14 +164,14 @@ export default function Language() {
 }
 
 const styles = StyleSheet.create({
+  // Screen
   screen_container: {
     flex: 1,
-    backgroundColor: "#2196F3",
     gap: 50,
   },
+  // Content
   content_container: {
     flex: 1,
-    backgroundColor: "#f5f6fa",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingTop: 28,
@@ -150,8 +180,7 @@ const styles = StyleSheet.create({
     marginBottom: -30,
     justifyContent: "space-between",
   },
-
-  // --- Title section ---
+  // Title
   title_section: {
     alignItems: "center",
     marginBottom: 24,
@@ -165,7 +194,6 @@ const styles = StyleSheet.create({
   title_line: {
     flex: 1,
     height: 1,
-    backgroundColor: "#DDDDDD",
   },
   title_text_block: {
     alignItems: "center",
@@ -174,23 +202,19 @@ const styles = StyleSheet.create({
   },
   title_arabic: {
     fontSize: 12,
-    color: "#AAAAAA",
     letterSpacing: 0.8,
   },
   title_main: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#2D2D2D",
     letterSpacing: 0.1,
   },
   title_sub: {
     fontSize: 13,
     fontWeight: "400",
-    color: "#999999",
     letterSpacing: 0.1,
   },
-
-  // --- Language rows ---
+  // Language Buttons
   buttons_section: {
     flex: 1,
     gap: 14,
@@ -202,21 +226,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: "100%",
     maxWidth: 340,
-    backgroundColor: "#FFFFFF",
     borderRadius: 16,
     paddingHorizontal: 18,
     paddingVertical: 16,
     borderWidth: 2,
-    borderColor: "transparent",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.07,
     shadowRadius: 4,
     elevation: 2,
-  },
-  language_row_selected: {
-    borderColor: "#09C849",
-    backgroundColor: "#F4FFF8",
   },
   flag: {
     fontSize: 26,
@@ -226,31 +244,17 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     fontWeight: "600",
-    color: "#1A1A2E",
-  },
-  language_name_selected: {
-    color: "#09C849",
   },
   language_badge: {
-    backgroundColor: "#F0F0F0",
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 20,
   },
-  language_badge_selected: {
-    backgroundColor: "#E0F9E8",
-  },
   language_badge_text: {
     fontSize: 13,
     fontWeight: "500",
-    color: "#888888",
   },
-  language_badge_text_selected: {
-    color: "#09C849",
-    fontWeight: "600",
-  },
-
-  // --- Save button ---
+  // Save Button
   save_section: {
     paddingBottom: 30,
     alignItems: "center",

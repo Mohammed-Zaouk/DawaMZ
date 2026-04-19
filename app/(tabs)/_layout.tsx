@@ -1,10 +1,22 @@
 // app/(tabs)/_layout.tsx
+import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 
 export default function TabLayout() {
+  const { theme } = useTheme();
+
   return (
-    <Tabs>
+    <Tabs
+      screenOptions={{
+        tabBarStyle: {
+          backgroundColor: theme.tabBarBg,
+          borderTopColor: theme.sideLine,
+        },
+        tabBarActiveTintColor: theme.tabBarActive,
+        tabBarInactiveTintColor: theme.tabBarInactive,
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
@@ -15,7 +27,6 @@ export default function TabLayout() {
           headerShown: false,
         }}
       />
-
       <Tabs.Screen
         name="search"
         options={{
@@ -26,7 +37,6 @@ export default function TabLayout() {
           headerShown: false,
         }}
       />
-
       <Tabs.Screen
         name="menu"
         options={{

@@ -1,6 +1,7 @@
 import Loading from "@/components/loading";
 import { PulseDot } from "@/components/pulse_dot";
 import { useLanguage } from "@/context/LanguageContext";
+import { useTheme } from "@/context/ThemeContext";
 import { formatDistance } from "@/utils/location/calculateDistance";
 import { findNearestOpenPharmacy } from "@/utils/location/nearest-open-pharmacy";
 import { Ionicons } from "@expo/vector-icons";
@@ -22,6 +23,7 @@ type NearbyPharmacy = Awaited<ReturnType<typeof findNearestOpenPharmacy>>;
 
 export default function AutoMap() {
   const { language } = useLanguage();
+  const { theme } = useTheme();
   const [snackbarVisible, setSnackbarVisible] = useState<boolean>(false);
   const [nearbypharmacy, setNearbypharmacy] = useState<NearbyPharmacy>(null);
   const [loading, setLoading] = useState(true);
@@ -137,25 +139,25 @@ export default function AutoMap() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.card }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: theme.card }]}>
         <TouchableOpacity
           onPress={() => router.back()}
-          style={styles.back_button}
+          style={[styles.back_button, { backgroundColor: theme.cardIcon }]}
         >
-          <Ionicons name="chevron-back" size={18} color="#1C1C1E" />
+          <Ionicons name="chevron-back" size={18} color={theme.text} />
         </TouchableOpacity>
         <View style={styles.header_info}>
           <Text
-            style={styles.header_title}
+            style={[styles.header_title, { color: theme.text }]}
             numberOfLines={1}
             ellipsizeMode="tail"
           >
             {text.title}
           </Text>
           <Text
-            style={styles.header_subtitle}
+            style={[styles.header_subtitle, { color: theme.itemDescription }]}
             numberOfLines={1}
             ellipsizeMode="tail"
           >
@@ -193,49 +195,63 @@ export default function AutoMap() {
         </MapView>
 
         {/* City Card */}
-        <View style={styles.city_card}>
+        <View style={[styles.city_card, { backgroundColor: theme.card }]}>
           <Ionicons
             name="location"
             size={14}
             color="#1A73E8"
             style={{ marginRight: 3 }}
           />
-          <Text style={styles.city_text}>{text.displayCityName}</Text>
+          <Text style={[styles.city_text, { color: theme.text }]}>
+            {text.displayCityName}
+          </Text>
         </View>
 
         {/* Distance Card */}
         {distance && (
-          <View style={styles.distance_card}>
+          <View style={[styles.distance_card, { backgroundColor: theme.card }]}>
             <Ionicons
               name="navigate"
               size={14}
               color="#1A73E8"
               style={{ marginRight: 6 }}
             />
-            <Text style={styles.distance_text}>{distance}</Text>
+            <Text style={[styles.distance_text, { color: theme.text }]}>
+              {distance}
+            </Text>
           </View>
         )}
 
         {/* Zoom Controls */}
         <View style={styles.zoom_controls}>
-          <View style={styles.btn_group}>
+          <View style={[styles.btn_group, { backgroundColor: theme.card }]}>
             <TouchableOpacity style={styles.map_btn} onPress={zoomIn}>
-              <Ionicons name="add" size={22} color="#1C1C1E" />
+              <Ionicons name="add" size={22} color={theme.text} />
             </TouchableOpacity>
-            <View style={styles.group_divider} />
+            <View
+              style={[
+                styles.group_divider,
+                { backgroundColor: theme.sideLine },
+              ]}
+            />
             <TouchableOpacity style={styles.map_btn} onPress={zoomOut}>
-              <Ionicons name="remove" size={22} color="#1C1C1E" />
+              <Ionicons name="remove" size={22} color={theme.text} />
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Navigation Controls */}
         <View style={styles.nav_controls}>
-          <View style={styles.btn_group}>
+          <View style={[styles.btn_group, { backgroundColor: theme.card }]}>
             <TouchableOpacity style={styles.map_btn} onPress={resetNorth}>
-              <Ionicons name="compass-outline" size={22} color="#1C1C1E" />
+              <Ionicons name="compass-outline" size={22} color={theme.text} />
             </TouchableOpacity>
-            <View style={styles.group_divider} />
+            <View
+              style={[
+                styles.group_divider,
+                { backgroundColor: theme.sideLine },
+              ]}
+            />
             <TouchableOpacity
               style={styles.map_btn_pharmacy}
               onPress={goToPharmacy}
@@ -247,8 +263,8 @@ export default function AutoMap() {
       </View>
 
       {/* Footer */}
-      <View style={styles.footer}>
-        <View style={styles.handle} />
+      <View style={[styles.footer, { backgroundColor: theme.card }]}>
+        <View style={[styles.handle, { backgroundColor: theme.chevron }]} />
         <View style={styles.action_bar}>
           <Button
             mode="contained"
@@ -268,7 +284,13 @@ export default function AutoMap() {
               <Ionicons name="call-outline" size={14} color="#1A73E8" />
             )}
             textColor="#1A73E8"
-            style={styles.action_button_secondary}
+            style={[
+              styles.action_button_secondary,
+              {
+                backgroundColor: theme.cardIcon,
+                borderColor: theme.headerBg,
+              },
+            ]}
             labelStyle={styles.action_button_secondary_label}
             onPress={handleCall}
           >
@@ -280,7 +302,13 @@ export default function AutoMap() {
               <Ionicons name="copy-outline" size={14} color="#1A73E8" />
             )}
             textColor="#1A73E8"
-            style={styles.action_button_secondary}
+            style={[
+              styles.action_button_secondary,
+              {
+                backgroundColor: theme.cardIcon,
+                borderColor: theme.headerBg,
+              },
+            ]}
             labelStyle={styles.action_button_secondary_label}
             onPress={handleCopy}
           >
@@ -306,13 +334,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     marginBottom: -25,
-    backgroundColor: "#FFFFFF",
   },
 
   // Header
   header: {
     height: 62,
-    backgroundColor: "#FFFFFF",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -322,7 +348,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#F2F2F7",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -333,12 +358,10 @@ const styles = StyleSheet.create({
   header_title: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#1C1C1E",
     letterSpacing: -0.2,
   },
   header_subtitle: {
     fontSize: 12,
-    color: "#8E8E93",
     marginTop: 2,
     letterSpacing: 0.1,
   },
@@ -361,7 +384,6 @@ const styles = StyleSheet.create({
     left: 20,
     flexDirection: "row",
     alignItems: "baseline",
-    backgroundColor: "#FFFFFF",
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 20,
@@ -374,7 +396,6 @@ const styles = StyleSheet.create({
   city_text: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#1C1C1E",
   },
 
   // Distance Card
@@ -384,7 +405,6 @@ const styles = StyleSheet.create({
     right: 60,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 20,
@@ -397,7 +417,6 @@ const styles = StyleSheet.create({
   distance_text: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#1C1C1E",
   },
 
   // Zoom Controls
@@ -415,7 +434,6 @@ const styles = StyleSheet.create({
   },
   btn_group: {
     borderRadius: 10,
-    backgroundColor: "#FFFFFF",
     overflow: "hidden",
     shadowColor: "#000",
     shadowOpacity: 0.12,
@@ -438,13 +456,11 @@ const styles = StyleSheet.create({
   },
   group_divider: {
     height: 0.5,
-    backgroundColor: "#E5E7EB",
     marginHorizontal: 8,
   },
 
   // Footer
   footer: {
-    backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingTop: 8,
@@ -460,7 +476,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: "#E0E0E5",
     alignSelf: "center",
     marginBottom: 14,
   },
@@ -486,9 +501,7 @@ const styles = StyleSheet.create({
     gap: 5,
     height: 40,
     borderRadius: 50,
-    backgroundColor: "#EEF4FD",
     borderWidth: 1,
-    borderColor: "#D6E4FA",
   },
   action_button_secondary_label: {
     fontSize: 12,

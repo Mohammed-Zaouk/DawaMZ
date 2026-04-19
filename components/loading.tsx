@@ -1,4 +1,5 @@
 import BackgroundBubbles from "@/components/background_bubbles";
+import { useTheme } from "@/context/ThemeContext";
 import { useEffect, useRef } from "react";
 import { Animated, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -62,10 +63,22 @@ function PulsingDots() {
 }
 
 export default function Loading() {
+  const { theme } = useTheme();
+
   return (
-    <SafeAreaView style={styles.loading_container}>
+    <SafeAreaView
+      style={[styles.loading_container, { backgroundColor: theme.screenBg }]}
+    >
       <BackgroundBubbles />
-      <View style={styles.search_bar_skeleton} />
+      <View
+        style={[
+          styles.search_bar_skeleton,
+          {
+            backgroundColor: theme.searchBarBg,
+            borderColor: theme.searchBarBorder,
+          },
+        ]}
+      />
       <View style={styles.center}>
         <PulsingDots />
       </View>
@@ -76,7 +89,6 @@ export default function Loading() {
 const styles = StyleSheet.create({
   loading_container: {
     flex: 1,
-    backgroundColor: "#2196F3",
     gap: 20,
     paddingHorizontal: 10,
     paddingTop: 15,
@@ -84,9 +96,7 @@ const styles = StyleSheet.create({
   search_bar_skeleton: {
     height: 52,
     borderRadius: 30,
-    backgroundColor: "#FFFFFF",
     borderWidth: 1.5,
-    borderColor: "rgba(33, 150, 243, 0.2)",
     opacity: 0.5,
   },
   center: {

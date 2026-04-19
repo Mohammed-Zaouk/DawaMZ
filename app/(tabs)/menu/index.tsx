@@ -1,16 +1,17 @@
 import BackgroundBubbles from "@/components/background_bubbles";
 import Header from "@/components/header";
 import { useLanguage } from "@/context/LanguageContext";
+import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Divider, List, Switch } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Menu() {
   const { language } = useLanguage();
-  const [themeMode, setThemeMode] = useState<boolean>(false);
+  const { theme, isDark, setTheme } = useTheme();
   const router = useRouter();
   const navigating = useRef(false);
 
@@ -81,25 +82,43 @@ export default function Menu() {
   const text = getText();
 
   return (
-    <SafeAreaView style={styles.screen_container}>
+    <SafeAreaView
+      style={[styles.screen_container, { backgroundColor: theme.screenBg }]}
+    >
       <BackgroundBubbles />
       <Header />
       <ScrollView
-        style={styles.content_container}
+        style={[styles.content_container, { backgroundColor: theme.contentBg }]}
         showsVerticalScrollIndicator={false}
       >
         {/* Settings Section */}
         <View style={styles.section}>
           <View style={styles.section_header_row}>
-            <Ionicons name="settings-outline" size={15} color="#2196F3" />
-            <Text style={styles.section_header}>{text.settings}</Text>
+            <Ionicons
+              name="settings-outline"
+              size={15}
+              color={theme.sectionHeader}
+            />
+            <Text
+              style={[styles.section_header, { color: theme.sectionHeader }]}
+            >
+              {text.settings}
+            </Text>
           </View>
-          <View style={styles.section_card}>
+          <View
+            style={[
+              styles.section_card,
+              { backgroundColor: theme.sectionCard },
+            ]}
+          >
             <List.Item
               title={text.language}
               description={text.currentLang}
-              titleStyle={styles.item_title}
-              descriptionStyle={styles.item_description}
+              titleStyle={[styles.item_title, { color: theme.itemTitle }]}
+              descriptionStyle={[
+                styles.item_description,
+                { color: theme.itemDescription },
+              ]}
               left={() => (
                 <View style={styles.icon_wrapper}>
                   <Ionicons name="language" size={22} color="#2196F3" />
@@ -107,7 +126,11 @@ export default function Menu() {
               )}
               right={() => (
                 <View style={styles.icon_wrapper}>
-                  <Ionicons name="chevron-forward" size={20} color="#999" />
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={theme.chevron}
+                  />
                 </View>
               )}
               onPress={() => handleNavigate("/(tabs)/menu/language")}
@@ -115,25 +138,23 @@ export default function Menu() {
             />
             <Divider style={styles.item_divider} />
             <List.Item
-              title={themeMode ? text.darkMode : text.lightMode}
-              titleStyle={styles.item_title}
+              title={isDark ? text.darkMode : text.lightMode}
+              titleStyle={[styles.item_title, { color: theme.itemTitle }]}
               left={() => (
                 <View style={styles.icon_wrapper}>
                   <Ionicons
-                    name={themeMode ? "moon-outline" : "sunny-outline"}
+                    name={isDark ? "moon-outline" : "sunny-outline"}
                     size={22}
                     color="#2196F3"
                   />
                 </View>
               )}
               right={() => (
-                <View style={styles.switch_wrapper}>
-                  <Switch
-                    value={themeMode}
-                    onValueChange={setThemeMode}
-                    color="#2196F3"
-                  />
-                </View>
+                <Switch
+                  value={isDark}
+                  onValueChange={(val) => setTheme(val ? "dark" : "light")}
+                  color="#2196F3"
+                />
               )}
               style={styles.list_item}
             />
@@ -143,13 +164,26 @@ export default function Menu() {
         {/* Legal Section */}
         <View style={styles.section}>
           <View style={styles.section_header_row}>
-            <Ionicons name="scale-outline" size={15} color="#2196F3" />
-            <Text style={styles.section_header}>{text.legal}</Text>
+            <Ionicons
+              name="scale-outline"
+              size={15}
+              color={theme.sectionHeader}
+            />
+            <Text
+              style={[styles.section_header, { color: theme.sectionHeader }]}
+            >
+              {text.legal}
+            </Text>
           </View>
-          <View style={styles.section_card}>
+          <View
+            style={[
+              styles.section_card,
+              { backgroundColor: theme.sectionCard },
+            ]}
+          >
             <List.Item
               title={text.privacy}
-              titleStyle={styles.item_title}
+              titleStyle={[styles.item_title, { color: theme.itemTitle }]}
               left={() => (
                 <View style={styles.icon_wrapper}>
                   <Ionicons
@@ -161,7 +195,11 @@ export default function Menu() {
               )}
               right={() => (
                 <View style={styles.icon_wrapper}>
-                  <Ionicons name="chevron-forward" size={20} color="#999" />
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={theme.chevron}
+                  />
                 </View>
               )}
               onPress={() => handleNavigate("/(tabs)/menu/privacy")}
@@ -170,7 +208,7 @@ export default function Menu() {
             <Divider style={styles.item_divider} />
             <List.Item
               title={text.terms}
-              titleStyle={styles.item_title}
+              titleStyle={[styles.item_title, { color: theme.itemTitle }]}
               left={() => (
                 <View style={styles.icon_wrapper}>
                   <Ionicons
@@ -182,7 +220,11 @@ export default function Menu() {
               )}
               right={() => (
                 <View style={styles.icon_wrapper}>
-                  <Ionicons name="chevron-forward" size={20} color="#999" />
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={theme.chevron}
+                  />
                 </View>
               )}
               onPress={() => handleNavigate("/(tabs)/menu/terms")}
@@ -197,14 +239,23 @@ export default function Menu() {
             <Ionicons
               name="information-circle-outline"
               size={15}
-              color="#2196F3"
+              color={theme.sectionHeader}
             />
-            <Text style={styles.section_header}>{text.about}</Text>
+            <Text
+              style={[styles.section_header, { color: theme.sectionHeader }]}
+            >
+              {text.about}
+            </Text>
           </View>
-          <View style={styles.section_card}>
+          <View
+            style={[
+              styles.section_card,
+              { backgroundColor: theme.sectionCard },
+            ]}
+          >
             <List.Item
               title={text.aboutApp}
-              titleStyle={styles.item_title}
+              titleStyle={[styles.item_title, { color: theme.itemTitle }]}
               left={() => (
                 <View style={styles.icon_wrapper}>
                   <Ionicons
@@ -216,7 +267,11 @@ export default function Menu() {
               )}
               right={() => (
                 <View style={styles.icon_wrapper}>
-                  <Ionicons name="chevron-forward" size={20} color="#999" />
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={theme.chevron}
+                  />
                 </View>
               )}
               onPress={() => handleNavigate("/(tabs)/menu/about")}
@@ -225,7 +280,7 @@ export default function Menu() {
             <Divider style={styles.item_divider} />
             <List.Item
               title={text.rate}
-              titleStyle={styles.item_title}
+              titleStyle={[styles.item_title, { color: theme.itemTitle }]}
               left={() => (
                 <View style={styles.icon_wrapper}>
                   <Ionicons name="star-outline" size={22} color="#2196F3" />
@@ -233,7 +288,11 @@ export default function Menu() {
               )}
               right={() => (
                 <View style={styles.icon_wrapper}>
-                  <Ionicons name="chevron-forward" size={20} color="#999" />
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={theme.chevron}
+                  />
                 </View>
               )}
               onPress={() => handleNavigate("/menu")}
@@ -242,7 +301,7 @@ export default function Menu() {
             <Divider style={styles.item_divider} />
             <List.Item
               title={text.share}
-              titleStyle={styles.item_title}
+              titleStyle={[styles.item_title, { color: theme.itemTitle }]}
               left={() => (
                 <View style={styles.icon_wrapper}>
                   <Ionicons
@@ -254,7 +313,11 @@ export default function Menu() {
               )}
               right={() => (
                 <View style={styles.icon_wrapper}>
-                  <Ionicons name="chevron-forward" size={20} color="#999" />
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={theme.chevron}
+                  />
                 </View>
               )}
               onPress={() => handleNavigate("/menu")}
@@ -264,8 +327,11 @@ export default function Menu() {
             <List.Item
               title={text.version}
               description="1.0.0"
-              titleStyle={styles.item_title}
-              descriptionStyle={styles.item_description}
+              titleStyle={[styles.item_title, { color: theme.itemTitle }]}
+              descriptionStyle={[
+                styles.item_description,
+                { color: theme.itemDescription },
+              ]}
               left={() => (
                 <View style={styles.icon_wrapper}>
                   <Ionicons
@@ -287,20 +353,23 @@ export default function Menu() {
 }
 
 const styles = StyleSheet.create({
+  // Screen
   screen_container: {
     flex: 1,
-    backgroundColor: "#2196F3",
     gap: 50,
   },
+
+  // ScrollView
   content_container: {
     flex: 1,
-    backgroundColor: "#f5f6fa",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingTop: 20,
     marginHorizontal: 10,
     marginBottom: -30,
   },
+
+  // Section
   section: {
     marginBottom: 20,
     paddingHorizontal: 16,
@@ -314,12 +383,10 @@ const styles = StyleSheet.create({
   section_header: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#2196F3",
     textTransform: "uppercase",
     letterSpacing: 0.8,
   },
   section_card: {
-    backgroundColor: "#ffffff",
     borderRadius: 20,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
@@ -328,17 +395,17 @@ const styles = StyleSheet.create({
     elevation: 2,
     overflow: "hidden",
   },
+
+  // List items
   list_item: {
     paddingLeft: 15,
   },
   item_title: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#1a1a2e",
   },
   item_description: {
     fontSize: 12,
-    color: "#aab0be",
     fontWeight: "500",
   },
   icon_wrapper: {
@@ -346,12 +413,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginLeft: 0,
   },
-  switch_wrapper: {
-    // Add your styles
-  },
   item_divider: {
     marginHorizontal: 20,
   },
+
+  // Footer
   footer_spacing: {
     height: 40,
   },
