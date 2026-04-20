@@ -224,9 +224,9 @@ export default function LanguageSelectionPage() {
             onValueChange={(val) => setTheme(val ? "dark" : "light")}
             trackColor={{
               false: "rgba(255,255,255,0.3)",
-              true: "rgba(255,255,255,0.5)",
+              true: isDark ? "#2099fc" : "rgba(255,255,255,0.5)",
             }}
-            thumbColor="#FFFFFF"
+            thumbColor={isDark ? "#2099fc" : "#FFFFFF"}
             ios_backgroundColor="rgba(255,255,255,0.3)"
           />
           <Ionicons
