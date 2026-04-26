@@ -8,10 +8,6 @@ export default function MapsLayout() {
         name="pharmacy-location"
         options={{ title: "Pharmacy Location" }}
       />
-      <Stack.Screen
-        name="pharmacy-direction"
-        options={{ title: "Pharmacy Direction" }}
-      />
     </Stack>
   );
 }

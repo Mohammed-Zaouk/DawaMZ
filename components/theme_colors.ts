@@ -9,11 +9,11 @@ export const lightTheme = {
   sectionCard: "#ffffff",
 
   // text
-  text: "#1A3A5C",
+  text: "#0d3b65",
   subtext: "#666666",
   sectionHeader: "#2196F3",
   itemTitle: "#1a1a2e",
-  itemDescription: "#aab0be",
+  itemDescription: "#959292",
   pageTitle: "#EAF3FF",
   pageSubtitle: "#D9DEE3",
 

@@ -3,28 +3,38 @@ import { PulseDot } from "@/components/pulse_dot";
 import { useLanguage } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
 import { formatDistance } from "@/utils/location/calculateDistance";
+import { useOSRM } from "@/utils/location/getRoute";
 import { findNearestOpenPharmacy } from "@/utils/location/nearest-open-pharmacy";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Linking,
+  Modal,
+  Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import MapView, { Marker, Region } from "react-native-maps";
+import MapView, { Marker, Polyline, Region, UrlTile } from "react-native-maps";
 import { Button, Snackbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+const MAPTILER_API_KEY = process.env.EXPO_PUBLIC_MAPTILER_API_KEY;
 
 type NearbyPharmacy = Awaited<ReturnType<typeof findNearestOpenPharmacy>>;
 
 export default function AutoMap() {
   const { language } = useLanguage();
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
+  const { routeCoords, status, fetchRoute, clearRoute } = useOSRM();
+
+  const [snackbarMessage, setSnackbarMessage] = useState<string>("");
   const [snackbarVisible, setSnackbarVisible] = useState<boolean>(false);
+  const [noRouteModal, setNoRouteModal] = useState<boolean>(false);
   const [nearbypharmacy, setNearbypharmacy] = useState<NearbyPharmacy>(null);
   const [loading, setLoading] = useState(true);
 
@@ -42,58 +52,147 @@ export default function AutoMap() {
     longitudeDelta: 0.005,
   });
 
+  const tileStyle = isDark ? "streets-v2-dark" : "streets-v2";
+  const MAPTILER_TILE_URL = `https://api.maptiler.com/maps/${tileStyle}/{z}/{x}/{y}.png?key=${MAPTILER_API_KEY}`;
+
+  const isLoadingRoute =
+    status === "fetching" || status === "requesting_permission";
+  const hasRoute = status === "success" && routeCoords.length > 0;
+
+  // ── Data fetching ──────────────────────────────────────────────────────────
   useEffect(() => {
-    const fetch = async () => {
+    const load = async () => {
       const result = await findNearestOpenPharmacy(
         Number(latitude),
         Number(longitude),
       );
       setNearbypharmacy(result);
+      if (result) {
+        setRegion({
+          latitude: result.latitude,
+          longitude: result.longitude,
+          latitudeDelta: 0.005,
+          longitudeDelta: 0.005,
+        });
+      }
       setLoading(false);
     };
-    fetch();
+    load();
   }, []);
+
+  // ── Watch OSRM status changes ──────────────────────────────────────────────
+  useEffect(() => {
+    if (status === "permission_denied") {
+      showSnackbar(getText().locationWarning);
+    }
+    if (status === "no_route" || status === "error") {
+      setNoRouteModal(true);
+    }
+    if (status === "success" && routeCoords.length > 0) {
+      mapRef.current?.fitToCoordinates(routeCoords, {
+        edgePadding: { top: 80, right: 60, bottom: 160, left: 60 },
+        animated: true,
+      });
+    }
+  }, [status]);
 
   if (loading || !nearbypharmacy) return <Loading />;
 
+  // ── Translations ───────────────────────────────────────────────────────────
   const getText = () => {
     if (language === "ar") {
       return {
         title: nearbypharmacy.name_ar,
         description: nearbypharmacy.address_ar,
         directions: "الاتجاهات",
+        clearRoute: "إلغاء المسار",
+        loadingRoute: "جاري تحميل المسار...",
         call: "اتصال",
         copy: "نسخ",
         copied: "تم نسخ العنوان",
+        noPhone: "رقم الهاتف غير متوفر",
+        locationWarning: "يرجى اعطاء صلاحيات الوصول للموقع لعرض المسافة",
         displayCityName: nearbypharmacy.cityNameAr,
+        noRouteTitle: "لم يتم العثور على مسار",
+        noRouteBody:
+          "تعذر تحميل المسار. يمكنك فتح خرائط Google للحصول على الاتجاهات.",
+        openGoogleMaps: "فتح خرائط Google",
+        cancel: "إلغاء",
       };
     } else if (language === "fr") {
       return {
         title: nearbypharmacy.name,
         description: nearbypharmacy.address,
         directions: "Itinéraire",
+        clearRoute: "Effacer",
+        loadingRoute: "Chargement...",
         call: "Appeler",
         copy: "Copier",
         copied: "Adresse copiée",
+        noPhone: "Numéro de téléphone non disponible",
+        locationWarning:
+          "Veuillez autoriser la localisation pour voir la distance",
         displayCityName: nearbypharmacy.cityName,
+        noRouteTitle: "Itinéraire introuvable",
+        noRouteBody:
+          "Impossible de calculer l'itinéraire. Vous pouvez ouvrir Google Maps à la place.",
+        openGoogleMaps: "Ouvrir Google Maps",
+        cancel: "Annuler",
       };
     } else {
       return {
         title: nearbypharmacy.name,
         description: nearbypharmacy.address,
         directions: "Directions",
+        clearRoute: "Clear Route",
+        loadingRoute: "Loading route...",
         call: "Call",
         copy: "Copy",
         copied: "Address copied to clipboard",
+        noPhone: "Phone number not available",
+        locationWarning: "Please allow location access to see the distance",
         displayCityName: nearbypharmacy.cityName,
+        noRouteTitle: "No Route Found",
+        noRouteBody:
+          "We couldn't find a route to this pharmacy. You can open Google Maps for directions instead.",
+        openGoogleMaps: "Open Google Maps",
+        cancel: "Cancel",
       };
     }
   };
 
   const text = getText();
   const isOpen = nearbypharmacy.open;
+  const hasPhone = !!nearbypharmacy.phone;
   const distance = formatDistance(nearbypharmacy.distance);
 
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  const showSnackbar = (message: string) => {
+    setSnackbarMessage(message);
+    setSnackbarVisible(true);
+  };
+
+  // ── Directions handler ─────────────────────────────────────────────────────
+  const handleDirections = async () => {
+    if (hasRoute) {
+      clearRoute();
+      goToPharmacy();
+      return;
+    }
+    await fetchRoute({
+      latitude: nearbypharmacy.latitude,
+      longitude: nearbypharmacy.longitude,
+    });
+  };
+
+  // ── Open Google Maps fallback ──────────────────────────────────────────────
+  const openGoogleMaps = () => {
+    setNoRouteModal(false);
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${nearbypharmacy.latitude},${nearbypharmacy.longitude}`;
+    Linking.openURL(url);
+  };
+
+  // ── Map controls ───────────────────────────────────────────────────────────
   const zoomIn = () => {
     mapRef.current?.animateToRegion(
       {
@@ -124,23 +223,27 @@ export default function AutoMap() {
     mapRef.current?.animateToRegion({
       latitude: nearbypharmacy.latitude,
       longitude: nearbypharmacy.longitude,
-      latitudeDelta: 0.05,
-      longitudeDelta: 0.05,
+      latitudeDelta: 0.005,
+      longitudeDelta: 0.005,
     });
   };
 
   const handleCall = () => {
+    if (!hasPhone) {
+      showSnackbar(text.noPhone);
+      return;
+    }
     Linking.openURL(`tel:${nearbypharmacy.phone}`);
   };
 
   const handleCopy = async () => {
     await Clipboard.setStringAsync(text.description as string);
-    setSnackbarVisible(true);
+    showSnackbar(text.copied);
   };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.card }]}>
-      {/* Header */}
+      {/* ── Header ──────────────────────────────────────────────────────────── */}
       <View style={[styles.header, { backgroundColor: theme.card }]}>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -169,20 +272,34 @@ export default function AutoMap() {
         </View>
       </View>
 
-      {/* Map */}
+      {/* ── Map ─────────────────────────────────────────────────────────────── */}
       <View style={{ flex: 1 }}>
         <MapView
           ref={mapRef}
           style={styles.map}
-          initialRegion={{
-            latitude: nearbypharmacy.latitude,
-            longitude: nearbypharmacy.longitude,
-            latitudeDelta: 0.005,
-            longitudeDelta: 0.005,
-          }}
+          region={region}
           onRegionChangeComplete={(r) => setRegion(r)}
-          showsUserLocation
+          mapType="none"
+          zoomEnabled={true}
+          scrollEnabled={true}
+          rotateEnabled={true}
+          pitchEnabled={true}
+          showsCompass={false}
+          showsScale={false}
+          showsBuildings={true}
+          showsTraffic={false}
+          showsUserLocation={true}
         >
+          {/* Maptiler tiles */}
+          <UrlTile
+            urlTemplate={MAPTILER_TILE_URL}
+            maximumZ={19}
+            flipY={false}
+            shouldReplaceMapContent={true}
+            zIndex={-1}
+          />
+
+          {/* Pharmacy marker */}
           <Marker
             coordinate={{
               latitude: nearbypharmacy.latitude,
@@ -190,8 +307,35 @@ export default function AutoMap() {
             }}
             title={text.title as string}
             description={text.description as string}
-            pinColor={isOpen ? "#09C849" : "#EF4444"}
-          />
+            anchor={{ x: 0.5, y: 1 }}
+          >
+            <View style={styles.marker_wrapper}>
+              <View
+                style={[
+                  styles.marker_bubble,
+                  { backgroundColor: isOpen ? "#09C849" : "#EF4444" },
+                ]}
+              >
+                <Ionicons name="medkit" size={16} color="#fff" />
+              </View>
+              <View
+                style={[
+                  styles.marker_tail,
+                  { borderTopColor: isOpen ? "#09C849" : "#EF4444" },
+                ]}
+              />
+            </View>
+          </Marker>
+
+          {/* OSRM route polyline */}
+          {hasRoute && (
+            <Polyline
+              coordinates={routeCoords}
+              strokeColor="#1A73E8"
+              strokeWidth={4}
+              lineDashPattern={[0]}
+            />
+          )}
         </MapView>
 
         {/* City Card */}
@@ -218,6 +362,16 @@ export default function AutoMap() {
             />
             <Text style={[styles.distance_text, { color: theme.text }]}>
               {distance}
+            </Text>
+          </View>
+        )}
+
+        {/* Route loading indicator */}
+        {isLoadingRoute && (
+          <View style={[styles.route_loading, { backgroundColor: theme.card }]}>
+            <ActivityIndicator size="small" color="#1A73E8" />
+            <Text style={[styles.route_loading_text, { color: theme.text }]}>
+              {text.loadingRoute}
             </Text>
           </View>
         )}
@@ -262,40 +416,63 @@ export default function AutoMap() {
         </View>
       </View>
 
-      {/* Footer */}
+      {/* ── Footer ──────────────────────────────────────────────────────────── */}
       <View style={[styles.footer, { backgroundColor: theme.card }]}>
         <View style={[styles.handle, { backgroundColor: theme.chevron }]} />
         <View style={styles.action_bar}>
+          {/* Directions / Clear Route */}
           <Button
             mode="contained"
-            icon={() => (
-              <Ionicons name="navigate-outline" size={14} color="#fff" />
-            )}
-            buttonColor="#1A73E8"
+            icon={() =>
+              isLoadingRoute ? (
+                <ActivityIndicator size={14} color="#fff" />
+              ) : (
+                <Ionicons
+                  name={hasRoute ? "close" : "navigate-outline"}
+                  size={14}
+                  color="#fff"
+                />
+              )
+            }
+            buttonColor={hasRoute ? "#EF4444" : "#1A73E8"}
             textColor="#fff"
             style={styles.action_button_primary}
             labelStyle={styles.action_button_label}
+            onPress={handleDirections}
+            disabled={isLoadingRoute}
           >
-            {text.directions}
+            {hasRoute ? text.clearRoute : text.directions}
           </Button>
+
+          {/* Call */}
           <Button
             mode="outlined"
             icon={() => (
-              <Ionicons name="call-outline" size={14} color="#1A73E8" />
+              <Ionicons
+                name="call-outline"
+                size={14}
+                color={hasPhone ? "#1A73E8" : theme.itemDescription}
+              />
             )}
-            textColor="#1A73E8"
+            textColor={hasPhone ? "#1A73E8" : theme.itemDescription}
             style={[
               styles.action_button_secondary,
               {
                 backgroundColor: theme.cardIcon,
                 borderColor: theme.headerBg,
+                opacity: hasPhone ? 1 : 0.5,
               },
             ]}
-            labelStyle={styles.action_button_secondary_label}
+            labelStyle={[
+              styles.action_button_secondary_label,
+              { color: hasPhone ? "#1A73E8" : theme.itemDescription },
+            ]}
             onPress={handleCall}
           >
             {text.call}
           </Button>
+
+          {/* Copy */}
           <Button
             mode="outlined"
             icon={() => (
@@ -317,20 +494,87 @@ export default function AutoMap() {
         </View>
       </View>
 
+      {/* ── No Route Modal ───────────────────────────────────────────────────── */}
+      <Modal
+        visible={noRouteModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setNoRouteModal(false)}
+      >
+        <Pressable
+          style={styles.modal_overlay}
+          onPress={() => setNoRouteModal(false)}
+        >
+          <Pressable
+            style={[styles.modal_card, { backgroundColor: theme.card }]}
+            onPress={(e) => e.stopPropagation()}
+          >
+            {/* Icon */}
+            <View style={styles.modal_icon_wrapper}>
+              <Ionicons name="map-outline" size={32} color="#1A73E8" />
+            </View>
+
+            {/* Title */}
+            <Text style={[styles.modal_title, { color: theme.text }]}>
+              {text.noRouteTitle}
+            </Text>
+
+            {/* Body */}
+            <Text style={[styles.modal_body, { color: theme.itemDescription }]}>
+              {text.noRouteBody}
+            </Text>
+
+            {/* Actions */}
+            <View style={styles.modal_actions}>
+              <TouchableOpacity
+                style={[
+                  styles.modal_btn_secondary,
+                  { borderColor: theme.sideLine },
+                ]}
+                onPress={() => setNoRouteModal(false)}
+              >
+                <Text
+                  style={[
+                    styles.modal_btn_secondary_text,
+                    { color: theme.text },
+                  ]}
+                >
+                  {text.cancel}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modal_btn_primary}
+                onPress={openGoogleMaps}
+              >
+                <Ionicons
+                  name="navigate"
+                  size={14}
+                  color="#fff"
+                  style={{ marginRight: 6 }}
+                />
+                <Text style={styles.modal_btn_primary_text}>
+                  {text.openGoogleMaps}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* ── Snackbar ─────────────────────────────────────────────────────────── */}
       <Snackbar
         visible={snackbarVisible}
         onDismiss={() => setSnackbarVisible(false)}
         duration={2000}
         style={styles.snackbar}
       >
-        {text.copied}
+        {snackbarMessage}
       </Snackbar>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  // Container
   container: {
     flex: 1,
     marginBottom: -25,
@@ -377,7 +621,33 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  // City Card
+  // Marker
+  marker_wrapper: {
+    alignItems: "center",
+  },
+  marker_bubble: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.25,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  marker_tail: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 6,
+    borderRightWidth: 6,
+    borderTopWidth: 8,
+    borderLeftColor: "transparent",
+    borderRightColor: "transparent",
+  },
+
+  // Overlays
   city_card: {
     position: "absolute",
     top: 16,
@@ -397,8 +667,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
   },
-
-  // Distance Card
   distance_card: {
     position: "absolute",
     top: 16,
@@ -418,15 +686,33 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
   },
+  route_loading: {
+    position: "absolute",
+    bottom: 80,
+    alignSelf: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  route_loading_text: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
 
-  // Zoom Controls
+  // Map controls
   zoom_controls: {
     position: "absolute",
     right: 12,
     top: 70,
   },
-
-  // Navigation Controls
   nav_controls: {
     position: "absolute",
     right: 12,
@@ -508,6 +794,78 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#1A73E8",
     letterSpacing: 0.1,
+  },
+
+  // No Route Modal
+  modal_overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 32,
+  },
+  modal_card: {
+    width: "100%",
+    borderRadius: 20,
+    padding: 24,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  modal_icon_wrapper: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#EFF6FF",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+  },
+  modal_title: {
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  modal_body: {
+    fontSize: 13,
+    textAlign: "center",
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  modal_actions: {
+    flexDirection: "row",
+    gap: 10,
+    width: "100%",
+  },
+  modal_btn_secondary: {
+    flex: 1,
+    height: 42,
+    borderRadius: 50,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modal_btn_secondary_text: {
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  modal_btn_primary: {
+    flex: 2,
+    height: 42,
+    borderRadius: 50,
+    backgroundColor: "#1A73E8",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modal_btn_primary_text: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#fff",
   },
 
   // Snackbar

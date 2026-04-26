@@ -15,7 +15,8 @@ export default function RootLayout() {
 
   const checkLanguage = async () => {
     try {
-      if (!getLanguage) {
+      const language = await getLanguage();
+      if (!language) {
         router.replace("/onboarding/language_selection");
       }
     } catch (error) {

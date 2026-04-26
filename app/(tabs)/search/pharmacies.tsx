@@ -12,6 +12,7 @@ import {
 } from "@/utils/location/calculateDistance";
 import { getUserLocation } from "@/utils/location/getLocation";
 import { Ionicons } from "@expo/vector-icons";
+import * as Location from "expo-location";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, {
   useCallback,
@@ -614,19 +615,64 @@ const CardItem = React.memo(function CardItem({
     status.type === "open" ||
     status.type === "lunch_break";
 
+  // ── Directions button ────────────────────────────────────────────────────
   const mapRedirect = async () => {
     if (navigating.current) return;
     navigating.current = true;
+
     try {
-      const loc = await getUserLocation();
-      if (loc) {
-        router.push({ pathname: "/maps/pharmacy-direction" });
+      // Step 1: Check current permission status without prompting yet
+      const { status: existingStatus } =
+        await Location.getForegroundPermissionsAsync();
+
+      if (existingStatus === "granted") {
+        // Already have permission — go straight to map with direction active
+        router.push({
+          pathname: "/maps/pharmacy-location",
+          params: {
+            pharmacyId: pharmacy.id,
+            distance: pharmacy.distance,
+            cityName: cityName,
+            cityNameAr: cityNameAr,
+            autoDirection: "true",
+          },
+        });
+        return;
+      }
+
+      if (existingStatus === "denied") {
+        // Permission was permanently denied — user must go to settings
+        Alert.alert(text.locationAlertTitle, text.locationAlertBody, [
+          { text: text.locationAlertCancel, style: "cancel" },
+          {
+            text: text.locationAlertSettings,
+            onPress: () => Location.enableNetworkProviderAsync(),
+          },
+        ]);
+        return;
+      }
+
+      // Step 2: Permission not yet asked — request it now
+      const { status: requestedStatus } =
+        await Location.requestForegroundPermissionsAsync();
+
+      if (requestedStatus === "granted") {
+        // Granted — navigate with direction active
+        router.push({
+          pathname: "/maps/pharmacy-location",
+          params: {
+            pharmacyId: pharmacy.id,
+            distance: pharmacy.distance,
+            cityName: cityName,
+            cityNameAr: cityNameAr,
+            autoDirection: "true",
+          },
+        });
       } else {
-        Alert.alert(
-          "Location Required",
-          "Please enable location permissions to use auto search.",
-          [{ text: "OK" }],
-        );
+        // Denied after asking
+        Alert.alert(text.locationAlertTitle, text.locationAlertBody, [
+          { text: text.locationAlertCancel, style: "cancel" },
+        ]);
       }
     } finally {
       setTimeout(() => {
@@ -745,7 +791,6 @@ const CardItem = React.memo(function CardItem({
             </Text>
           </View>
           <View style={styles.title_row}>
-            // Pills — replace pill_night and pill_oncall styles:
             {pharmacy.is_night_pharmacy && (
               <View
                 style={[
@@ -796,7 +841,7 @@ const CardItem = React.memo(function CardItem({
         <View style={styles.info_container}>
           <View style={styles.info_row}>
             <Text
-              style={[styles.info_text, { color: theme.itemDescription }]}
+              style={[styles.info_text, { color: theme.subtext }]}
               numberOfLines={1}
               ellipsizeMode="tail"
             >
@@ -816,7 +861,7 @@ const CardItem = React.memo(function CardItem({
             <Text
               style={[
                 styles.info_text,
-                { color: theme.itemDescription },
+                { color: theme.subtext },
                 !pharmacy.phone && styles.info_text_unavailable,
               ]}
               numberOfLines={1}
@@ -840,7 +885,7 @@ const CardItem = React.memo(function CardItem({
             <Text
               style={[
                 styles.info_text,
-                { color: theme.itemDescription },
+                { color: theme.subtext },
                 !pharmacy.distance && styles.info_text_unavailable,
               ]}
               numberOfLines={1}
