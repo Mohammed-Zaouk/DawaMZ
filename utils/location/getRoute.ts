@@ -95,7 +95,7 @@ export function useOSRM(): UseOSRMReturn {
         `https://router.project-osrm.org/route/v1/driving/` +
           `${userLng},${userLat};${destination.longitude},${destination.latitude}` +
           `?overview=full&geometries=geojson`,
-        { signal: AbortSignal.timeout(10000) } // 10s timeout
+        { signal: AbortSignal.timeout(10000) }, // 10s timeout
       );
 
       if (!response.ok) {
@@ -112,7 +112,7 @@ export function useOSRM(): UseOSRMReturn {
 
       // GeoJSON coords are [lng, lat] — flip for react-native-maps
       const coords: Coord[] = data.routes[0].geometry.coordinates.map(
-        ([lng, lat]: [number, number]) => ({ latitude: lat, longitude: lng })
+        ([lng, lat]: [number, number]) => ({ latitude: lat, longitude: lng }),
       );
 
       setRouteCoords(coords);

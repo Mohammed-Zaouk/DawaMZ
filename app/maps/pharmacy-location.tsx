@@ -7,6 +7,17 @@ import { formatDistance } from "@/utils/location/calculateDistance";
 import { checkLocationPermission } from "@/utils/location/getLocation";
 import { useOSRM } from "@/utils/location/getRoute";
 import { Ionicons } from "@expo/vector-icons";
+import {
+  Camera,
+  CameraRef,
+  LineLayer,
+  MapView,
+  MapViewRef,
+  MarkerView,
+  ShapeSource,
+  UserLocation,
+  setAccessToken,
+} from "@maplibre/maplibre-react-native";
 import * as Clipboard from "expo-clipboard";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -20,9 +31,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import MapView, { Marker, Polyline, Region, UrlTile } from "react-native-maps";
 import { Button, Snackbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+setAccessToken(null);
 
 const MAPTILER_API_KEY = process.env.EXPO_PUBLIC_MAPTILER_API_KEY;
 
@@ -54,20 +66,34 @@ export default function PharmacyMap() {
   const [loading, setLoading] = useState(true);
   const [pharmacy, setPharmacy] = useState<Pharmacy | null>(null);
 
-  const mapRef = useRef<MapView>(null);
-  const [region, setRegion] = useState<Region>({
-    latitude: 0,
-    longitude: 0,
-    latitudeDelta: 0.005,
-    longitudeDelta: 0.005,
-  });
+  // ── Refs ───────────────────────────────────────────────────────────────────
+  const userLocationRef = useRef<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const mapRef = useRef<MapViewRef>(null);
+  const cameraRef = useRef<CameraRef>(null);
 
   const tileStyle = isDark ? "streets-v2-dark" : "streets-v2";
-  const MAPTILER_TILE_URL = `https://api.maptiler.com/maps/${tileStyle}/{z}/{x}/{y}.png?key=${MAPTILER_API_KEY}`;
+  const MAPTILER_STYLE_URL = `https://api.maptiler.com/maps/${tileStyle}/style.json?key=${MAPTILER_API_KEY}`;
+
   const hasPhone = !!pharmacy?.phone;
   const isLoadingRoute =
     status === "fetching" || status === "requesting_permission";
   const hasRoute = status === "success" && routeCoords.length > 0;
+
+  // Build GeoJSON for the route polyline
+  const routeGeoJSON: GeoJSON.Feature<GeoJSON.LineString> | null =
+    hasRoute && routeCoords.length > 0
+      ? {
+          type: "Feature",
+          geometry: {
+            type: "LineString",
+            coordinates: routeCoords.map((c) => [c.longitude, c.latitude]),
+          },
+          properties: {},
+        }
+      : null;
 
   // ── Data fetching ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -84,11 +110,10 @@ export default function PharmacyMap() {
       .single();
     if (!error && data) {
       setPharmacy(data);
-      setRegion({
-        latitude: data.latitude,
-        longitude: data.longitude,
-        latitudeDelta: 0.005,
-        longitudeDelta: 0.005,
+      cameraRef.current?.setCamera({
+        centerCoordinate: [data.longitude, data.latitude],
+        zoomLevel: 15,
+        animationDuration: 0,
       });
     }
     setLoading(false);
@@ -117,11 +142,14 @@ export default function PharmacyMap() {
       setNoRouteModal(true);
     }
     if (status === "success" && routeCoords.length > 0) {
-      // Auto-fit map to show the full route
-      mapRef.current?.fitToCoordinates(routeCoords, {
-        edgePadding: { top: 80, right: 60, bottom: 160, left: 60 },
-        animated: true,
-      });
+      const lats = routeCoords.map((c) => c.latitude);
+      const lngs = routeCoords.map((c) => c.longitude);
+      cameraRef.current?.fitBounds(
+        [Math.max(...lngs), Math.max(...lats)],
+        [Math.min(...lngs), Math.min(...lats)],
+        [80, 60, 160, 60],
+        500,
+      );
     }
   }, [status]);
 
@@ -147,38 +175,51 @@ export default function PharmacyMap() {
   };
 
   // ── Map controls ───────────────────────────────────────────────────────────
-  const zoomIn = () => {
-    mapRef.current?.animateToRegion(
-      {
-        ...region,
-        latitudeDelta: region.latitudeDelta / 2,
-        longitudeDelta: region.longitudeDelta / 2,
-      },
-      300,
-    );
+  const zoomIn = async () => {
+    const zoom = await mapRef.current?.getZoom();
+    cameraRef.current?.setCamera({
+      zoomLevel: (zoom ?? 14) + 1,
+      animationDuration: 300,
+    });
   };
 
-  const zoomOut = () => {
-    mapRef.current?.animateToRegion(
-      {
-        ...region,
-        latitudeDelta: region.latitudeDelta * 2,
-        longitudeDelta: region.longitudeDelta * 2,
-      },
-      300,
-    );
+  const zoomOut = async () => {
+    const zoom = await mapRef.current?.getZoom();
+    cameraRef.current?.setCamera({
+      zoomLevel: (zoom ?? 14) - 1,
+      animationDuration: 300,
+    });
   };
 
   const resetNorth = () => {
-    mapRef.current?.animateCamera({ heading: 0 }, { duration: 300 });
+    cameraRef.current?.setCamera({
+      heading: 0,
+      animationDuration: 300,
+    });
   };
 
   const goToPharmacy = () => {
-    mapRef.current?.animateToRegion({
-      latitude: Number(pharmacy?.latitude),
-      longitude: Number(pharmacy?.longitude),
-      latitudeDelta: 0.005,
-      longitudeDelta: 0.005,
+    if (!pharmacy) return;
+    cameraRef.current?.setCamera({
+      centerCoordinate: [pharmacy.longitude, pharmacy.latitude],
+      zoomLevel: 15,
+      animationDuration: 500,
+    });
+  };
+
+  // ── Go to user location ────────────────────────────────────────────────────
+  const goToUserLocation = () => {
+    if (!userLocationRef.current) {
+      showSnackbar(text.locationWarningFeature);
+      return;
+    }
+    cameraRef.current?.setCamera({
+      centerCoordinate: [
+        userLocationRef.current.longitude,
+        userLocationRef.current.latitude,
+      ],
+      zoomLevel: 15,
+      animationDuration: 500,
     });
   };
 
@@ -201,6 +242,8 @@ export default function PharmacyMap() {
         call: "اتصال",
         copy: "نسخ",
         locationWarning: "يرجى اعطاء صلاحيات الوصول للموقع لعرض المسافة",
+        locationWarningFeature:
+          "يرجى اعطاء صلاحيات الوصول للموقع لاستخدام هذه الميزة",
         copied: "تم نسخ العنوان",
         noPhone: "رقم الهاتف غير متوفر",
         noRouteTitle: "لم يتم العثور على مسار",
@@ -221,6 +264,8 @@ export default function PharmacyMap() {
         copy: "Copier",
         locationWarning:
           "Veuillez autoriser la localisation pour voir la distance",
+        locationWarningFeature:
+          "Veuillez autoriser la localisation pour utiliser cette fonctionnalité",
         copied: "Adresse copiée",
         noPhone: "Numéro de téléphone non disponible",
         noRouteTitle: "Itinéraire introuvable",
@@ -240,6 +285,8 @@ export default function PharmacyMap() {
         call: "Call",
         copy: "Copy",
         locationWarning: "Please allow location access to see the distance",
+        locationWarningFeature:
+          "Please allow location access to use this feature",
         copied: "Address copied to clipboard",
         noPhone: "Phone number not available",
         noRouteTitle: "No Route Found",
@@ -304,64 +351,75 @@ export default function PharmacyMap() {
         <MapView
           ref={mapRef}
           style={styles.map}
-          region={region}
-          onRegionChangeComplete={(r) => setRegion(r)}
-          mapType="none"
+          mapStyle={MAPTILER_STYLE_URL}
           zoomEnabled={true}
           scrollEnabled={true}
           rotateEnabled={true}
           pitchEnabled={true}
-          showsCompass={false}
-          showsScale={false}
-          showsBuildings={true}
-          showsTraffic={false}
-          showsUserLocation={true}
+          compassEnabled={false}
+          logoEnabled={false}
+          attributionEnabled={false}
         >
-          {/* Maptiler tiles */}
-          <UrlTile
-            urlTemplate={MAPTILER_TILE_URL}
-            maximumZ={19}
-            flipY={false}
-            shouldReplaceMapContent={true}
-            zIndex={-1}
+          <Camera
+            ref={cameraRef}
+            defaultSettings={{
+              centerCoordinate: [
+                pharmacy?.longitude ?? 0,
+                pharmacy?.latitude ?? 0,
+              ],
+              zoomLevel: 15,
+            }}
+          />
+
+          {/* User location dot — onUpdate stores coords for the locate button */}
+          <UserLocation
+            visible={true}
+            onUpdate={(location) => {
+              userLocationRef.current = {
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+              };
+            }}
           />
 
           {/* Pharmacy marker */}
-          <Marker
-            coordinate={{
-              latitude: Number(pharmacy?.latitude),
-              longitude: Number(pharmacy?.longitude),
-            }}
-            title={text.title as string}
-            description={text.description as string}
-            anchor={{ x: 0.5, y: 1 }}
-          >
-            <View style={styles.marker_wrapper}>
-              <View
-                style={[
-                  styles.marker_bubble,
-                  { backgroundColor: pharmacy?.open ? "#09C849" : "#EF4444" },
-                ]}
-              >
-                <Ionicons name="medkit" size={16} color="#fff" />
+          {pharmacy && (
+            <MarkerView
+              coordinate={[pharmacy.longitude, pharmacy.latitude]}
+              anchor={{ x: 0.5, y: 1 }}
+            >
+              <View style={styles.marker_wrapper} collapsable={false}>
+                <View
+                  style={[
+                    styles.marker_bubble,
+                    { backgroundColor: pharmacy.open ? "#09C849" : "#EF4444" },
+                  ]}
+                >
+                  <Ionicons name="medkit" size={16} color="#fff" />
+                </View>
+                <View
+                  style={[
+                    styles.marker_tail,
+                    { borderTopColor: pharmacy.open ? "#09C849" : "#EF4444" },
+                  ]}
+                />
               </View>
-              <View
-                style={[
-                  styles.marker_tail,
-                  { borderTopColor: pharmacy?.open ? "#09C849" : "#EF4444" },
-                ]}
-              />
-            </View>
-          </Marker>
+            </MarkerView>
+          )}
 
           {/* OSRM route polyline */}
-          {hasRoute && (
-            <Polyline
-              coordinates={routeCoords}
-              strokeColor="#1A73E8"
-              strokeWidth={4}
-              lineDashPattern={[0]}
-            />
+          {routeGeoJSON && (
+            <ShapeSource id="route-source" shape={routeGeoJSON}>
+              <LineLayer
+                id="route-line"
+                style={{
+                  lineColor: "#1A73E8",
+                  lineWidth: 4,
+                  lineCap: "round",
+                  lineJoin: "round",
+                }}
+              />
+            </ShapeSource>
           )}
         </MapView>
 
@@ -402,6 +460,14 @@ export default function PharmacyMap() {
             </Text>
           </View>
         )}
+
+        {/* ── User Location Button — top right ──────────────────────────────── */}
+        <TouchableOpacity
+          style={[styles.user_location_btn, { backgroundColor: theme.card }]}
+          onPress={goToUserLocation}
+        >
+          <Ionicons name="locate-outline" size={20} color="#1A73E8" />
+        </TouchableOpacity>
 
         {/* Zoom Controls */}
         <View style={styles.zoom_controls}>
@@ -472,49 +538,48 @@ export default function PharmacyMap() {
           </Button>
 
           {/* Call */}
-          <Button
-            mode="outlined"
-            icon={() => (
-              <Ionicons
-                name="call-outline"
-                size={14}
-                color={hasPhone ? "#1A73E8" : theme.itemDescription}
-              />
-            )}
-            textColor={hasPhone ? "#1A73E8" : theme.itemDescription}
-            style={[
+          <Pressable
+            style={({ pressed }) => [
               styles.action_btn_secondary,
               {
-                backgroundColor: theme.cardIcon,
+                backgroundColor: pressed ? theme.headerBg : theme.cardIcon,
                 borderColor: theme.headerBg,
                 opacity: hasPhone ? 1 : 0.5,
               },
             ]}
-            labelStyle={[
-              styles.action_btn_secondary_label,
-              { color: hasPhone ? "#1A73E8" : theme.itemDescription },
-            ]}
             onPress={handleCall}
+            android_ripple={{ color: theme.sideLine, borderless: false }}
           >
-            {text.call}
-          </Button>
+            <Ionicons
+              name="call-outline"
+              size={14}
+              color={hasPhone ? "#1A73E8" : theme.itemDescription}
+            />
+            <Text
+              style={[
+                styles.action_btn_secondary_label,
+                { color: hasPhone ? "#1A73E8" : theme.itemDescription },
+              ]}
+            >
+              {text.call}
+            </Text>
+          </Pressable>
 
           {/* Copy */}
-          <Button
-            mode="outlined"
-            icon={() => (
-              <Ionicons name="copy-outline" size={14} color="#1A73E8" />
-            )}
-            textColor="#1A73E8"
-            style={[
+          <Pressable
+            style={({ pressed }) => [
               styles.action_btn_secondary,
-              { backgroundColor: theme.cardIcon, borderColor: theme.headerBg },
+              {
+                backgroundColor: pressed ? theme.headerBg : theme.cardIcon,
+                borderColor: theme.headerBg,
+              },
             ]}
-            labelStyle={styles.action_btn_secondary_label}
             onPress={handleCopy}
+            android_ripple={{ color: theme.sideLine, borderless: false }}
           >
-            {text.copy}
-          </Button>
+            <Ionicons name="copy-outline" size={14} color="#1A73E8" />
+            <Text style={styles.action_btn_secondary_label}>{text.copy}</Text>
+          </Pressable>
         </View>
 
         {!check && (
@@ -542,22 +607,15 @@ export default function PharmacyMap() {
             style={[styles.modal_card, { backgroundColor: theme.card }]}
             onPress={(e) => e.stopPropagation()}
           >
-            {/* Icon */}
             <View style={styles.modal_icon_wrapper}>
               <Ionicons name="map-outline" size={32} color="#1A73E8" />
             </View>
-
-            {/* Title */}
             <Text style={[styles.modal_title, { color: theme.text }]}>
               {text.noRouteTitle}
             </Text>
-
-            {/* Body */}
             <Text style={[styles.modal_body, { color: theme.itemDescription }]}>
               {text.noRouteBody}
             </Text>
-
-            {/* Actions */}
             <View style={styles.modal_actions}>
               <TouchableOpacity
                 style={[
@@ -741,11 +799,28 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
+  // User location button — top right, above zoom controls
+  user_location_btn: {
+    position: "absolute",
+    top: 16,
+    right: 12,
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 10,
+    elevation: 3,
+  },
+
   // Map controls
   zoom_controls: {
     position: "absolute",
     right: 12,
-    top: 60,
+    top: 70,
   },
   nav_controls: {
     position: "absolute",
@@ -815,13 +890,14 @@ const styles = StyleSheet.create({
   },
   action_btn_secondary: {
     flex: 1,
+    height: 40,
+    borderRadius: 50,
+    borderWidth: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 5,
-    height: 40,
-    borderRadius: 50,
-    borderWidth: 1,
+    overflow: "hidden",
   },
   action_btn_secondary_label: {
     fontSize: 12,
@@ -837,6 +913,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingVertical: 8,
     paddingHorizontal: 10,
+    marginBottom: 8,
     borderWidth: 1,
     borderColor: "#FDE68A",
   },
@@ -918,8 +995,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#fff",
   },
-
-  // Snackbar
   snackbar: {
     borderRadius: 12,
     marginHorizontal: 16,

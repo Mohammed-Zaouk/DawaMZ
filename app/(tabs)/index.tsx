@@ -4,8 +4,9 @@ import { useTheme } from "@/context/ThemeContext";
 import { getUserLocation } from "@/utils/location/getLocation";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Image,
   StyleSheet,
@@ -22,6 +23,7 @@ export default function Index() {
   const { theme } = useTheme();
 
   const navigating = useRef(false);
+  const [locating, setLocating] = useState(false);
 
   const withGuard = (action: () => void) => {
     if (navigating.current) return;
@@ -33,8 +35,9 @@ export default function Index() {
   };
 
   const mapRedirect = async () => {
-    if (navigating.current) return;
+    if (navigating.current || locating) return;
     navigating.current = true;
+    setLocating(true);
     try {
       const loc = await getUserLocation();
       if (loc) {
@@ -48,6 +51,7 @@ export default function Index() {
         ]);
       }
     } finally {
+      setLocating(false);
       setTimeout(() => {
         navigating.current = false;
       }, 500);
@@ -68,6 +72,7 @@ export default function Index() {
         manualTitle: "البحث اليدوي",
         manualSubtitle: "البحث حسب المنطقة/المدينة",
         autoBadge: "Auto",
+        locating: "جاري تحديد موقعك...",
         alertTitle: "الموقع مطلوب",
         alertMessage:
           "يرجى اعطاء صلاحيات الوصول للموقع لاستخدام البحث التلقائي.",
@@ -82,6 +87,7 @@ export default function Index() {
         manualTitle: "Recherche manuelle",
         manualSubtitle: "Rechercher par région/ville",
         autoBadge: "Auto",
+        locating: "Localisation en cours...",
         alertTitle: "Localisation requise",
         alertMessage:
           "Veuillez donner les permissions d'accès à la localisation pour utiliser la recherche automatique.",
@@ -96,6 +102,7 @@ export default function Index() {
         manualTitle: "Manual search",
         manualSubtitle: "Search by region/city",
         autoBadge: "Auto",
+        locating: "Getting your location...",
         alertTitle: "Location Required",
         alertMessage:
           "Please grant location access permissions to use automatic search.",
@@ -148,20 +155,37 @@ export default function Index() {
       {/* Search Cards */}
       <View style={styles.cards_container}>
         {/* Auto Search */}
-        <TouchableOpacity onPress={mapRedirect} activeOpacity={0.85}>
-          <View style={[styles.card, { backgroundColor: theme.card }]}>
+        <TouchableOpacity
+          onPress={mapRedirect}
+          activeOpacity={0.85}
+          disabled={locating}
+        >
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: theme.card, opacity: locating ? 0.7 : 1 },
+            ]}
+          >
             <View
               style={[
                 styles.icon_container,
                 { backgroundColor: theme.cardIcon },
               ]}
             >
-              <Ionicons
-                name="locate"
-                size={28}
-                color="#2196F3"
-                style={{ padding: 7 }}
-              />
+              {locating ? (
+                <ActivityIndicator
+                  size={28}
+                  color="#2196F3"
+                  style={{ padding: 7 }}
+                />
+              ) : (
+                <Ionicons
+                  name="locate"
+                  size={28}
+                  color="#2196F3"
+                  style={{ padding: 7 }}
+                />
+              )}
             </View>
             <View style={styles.card_text}>
               <View style={styles.title_row}>
@@ -183,7 +207,7 @@ export default function Index() {
                 numberOfLines={1}
                 ellipsizeMode="tail"
               >
-                {text.autoSubtitle}
+                {locating ? text.locating : text.autoSubtitle}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={theme.chevron} />

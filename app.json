@@ -34,7 +34,8 @@
           "hideExpoText": true
         }
       ],
-      "expo-font"
+      "expo-font",
+      "@maplibre/maplibre-react-native"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -46,6 +47,12 @@
         "projectId": "6df4a20d-a0eb-4830-9f15-de0cb3b556be"
       }
     },
-    "owner": "dawamzs-organization"
+    "owner": "dawamzs-organization",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/6df4a20d-a0eb-4830-9f15-de0cb3b556be"
+    }
   }
 }

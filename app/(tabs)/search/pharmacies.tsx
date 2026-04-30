@@ -23,12 +23,11 @@ import React, {
 } from "react";
 import {
   Alert,
-  FlatList,
-  ScrollView,
+  FlatList, Linking, ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { Button, Searchbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -145,7 +144,6 @@ export default function PharmaciesPage() {
     }
   };
 
-  // ── Memoized so CardItem's `text` prop stays stable between renders ──
   const text = useMemo(() => {
     if (language === "ar") {
       return {
@@ -182,6 +180,10 @@ export default function PharmaciesPage() {
         page: (c: number, t: number) => `${c} / ${t}`,
         prevPage: "السابق",
         nextPage: "التالي",
+        locationAlertTitle: "تعذر الوصول إلى الموقع",
+        locationAlertBody: "يرجى تفعيل صلاحيات الموقع من إعدادات الجهاز",
+        locationAlertCancel: "إلغاء",
+        locationAlertSettings: "فتح الإعدادات",
       };
     } else if (language === "fr") {
       return {
@@ -222,6 +224,11 @@ export default function PharmaciesPage() {
         page: (c: number, t: number) => `${c} / ${t}`,
         prevPage: "Précédent",
         nextPage: "Suivant",
+        locationAlertTitle: "Accès refusé",
+        locationAlertBody:
+          "Veuillez activer la localisation dans les paramètres de votre appareil",
+        locationAlertCancel: "Annuler",
+        locationAlertSettings: "Ouvrir les paramètres",
       };
     } else {
       return {
@@ -259,6 +266,11 @@ export default function PharmaciesPage() {
         page: (c: number, t: number) => `${c} / ${t}`,
         prevPage: "Previous",
         nextPage: "Next",
+        locationAlertTitle: "Location access denied",
+        locationAlertBody:
+          "Please enable location permissions in your device settings",
+        locationAlertCancel: "Cancel",
+        locationAlertSettings: "Open Settings",
       };
     }
   }, [language]);
@@ -641,12 +653,11 @@ const CardItem = React.memo(function CardItem({
       }
 
       if (existingStatus === "denied") {
-        // Permission was permanently denied — user must go to settings
         Alert.alert(text.locationAlertTitle, text.locationAlertBody, [
           { text: text.locationAlertCancel, style: "cancel" },
           {
             text: text.locationAlertSettings,
-            onPress: () => Location.enableNetworkProviderAsync(),
+            onPress: () => Linking.openSettings(),
           },
         ]);
         return;
