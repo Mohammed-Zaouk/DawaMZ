@@ -43,3 +43,6 @@ yarn-error.*
 
 data/
 eas.json
+
+scripts/
+.vscode/
