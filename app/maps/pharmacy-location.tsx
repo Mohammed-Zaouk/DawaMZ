@@ -38,6 +38,9 @@ setAccessToken(null);
 
 const MAPTILER_API_KEY = process.env.EXPO_PUBLIC_MAPTILER_API_KEY;
 
+// OSM raster fallback
+const OSM_STYLE_URL = "https://demotiles.maplibre.org/style.json";
+
 type Pharmacy = {
   id: string;
   name: string;
@@ -65,6 +68,7 @@ export default function PharmacyMap() {
   const [noRouteModal, setNoRouteModal] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [pharmacy, setPharmacy] = useState<Pharmacy | null>(null);
+  const [useOSMFallback, setUseOSMFallback] = useState<boolean>(false);
 
   // ── Refs ───────────────────────────────────────────────────────────────────
   const userLocationRef = useRef<{
@@ -76,6 +80,8 @@ export default function PharmacyMap() {
 
   const tileStyle = isDark ? "streets-v2-dark" : "streets-v2";
   const MAPTILER_STYLE_URL = `https://api.maptiler.com/maps/${tileStyle}/style.json?key=${MAPTILER_API_KEY}`;
+
+  const activeMapStyle = useOSMFallback ? OSM_STYLE_URL : MAPTILER_STYLE_URL;
 
   const hasPhone = !!pharmacy?.phone;
   const isLoadingRoute =
@@ -351,7 +357,7 @@ export default function PharmacyMap() {
         <MapView
           ref={mapRef}
           style={styles.map}
-          mapStyle={MAPTILER_STYLE_URL}
+          mapStyle={activeMapStyle}
           zoomEnabled={true}
           scrollEnabled={true}
           rotateEnabled={true}
@@ -359,6 +365,11 @@ export default function PharmacyMap() {
           compassEnabled={false}
           logoEnabled={false}
           attributionEnabled={false}
+          onDidFailLoadingMap={() => {
+            if (!useOSMFallback) {
+              setUseOSMFallback(true);
+            }
+          }}
         >
           <Camera
             ref={cameraRef}
@@ -422,6 +433,22 @@ export default function PharmacyMap() {
             </ShapeSource>
           )}
         </MapView>
+
+        {/* OSM fallback notice */}
+        {useOSMFallback && (
+          <View style={[styles.osm_notice, { backgroundColor: theme.card }]}>
+            <Ionicons
+              name="information-circle-outline"
+              size={13}
+              color={theme.itemDescription}
+            />
+            <Text
+              style={[styles.osm_notice_text, { color: theme.itemDescription }]}
+            >
+              Using OpenStreetMap
+            </Text>
+          </View>
+        )}
 
         {/* City Card */}
         <View style={[styles.city_card, { backgroundColor: theme.card }]}>
@@ -799,7 +826,25 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  // User location button — top right, above zoom controls
+  // OSM fallback notice
+  osm_notice: {
+    position: "absolute",
+    bottom: 16,
+    alignSelf: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 20,
+    opacity: 0.8,
+  },
+  osm_notice_text: {
+    fontSize: 11,
+    fontWeight: "500",
+  },
+
+  // User location button
   user_location_btn: {
     position: "absolute",
     top: 16,
@@ -898,6 +943,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 5,
     overflow: "hidden",
+    paddingHorizontal: 8,
   },
   action_btn_secondary_label: {
     fontSize: 12,
