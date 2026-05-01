@@ -943,7 +943,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 5,
     overflow: "hidden",
-    paddingHorizontal: 8,
   },
   action_btn_secondary_label: {
     fontSize: 12,
