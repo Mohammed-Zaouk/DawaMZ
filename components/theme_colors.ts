@@ -9,7 +9,7 @@ export const lightTheme = {
   sectionCard: "#ffffff",
 
   // text
-  text: "#0d3b65",
+  text: "#275989",
   subtext: "#666666",
   sectionHeader: "#2196F3",
   itemTitle: "#1a1a2e",

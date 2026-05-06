@@ -23,11 +23,13 @@ import React, {
 } from "react";
 import {
   Alert,
-  FlatList, Linking, ScrollView,
+  FlatList,
+  Linking,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { Button, Searchbar } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -726,7 +728,6 @@ const CardItem = React.memo(function CardItem({
           label: text.alwaysOpen,
           color: "#22c55e",
           icon: "time-outline" as const,
-          bg: "#f0fdf4",
         };
       case "open":
         if (status.closingSoon)
@@ -734,22 +735,20 @@ const CardItem = React.memo(function CardItem({
             label: text.closingSoon(status.minsLeft),
             color: "#d97706",
             icon: "time-outline" as const,
-            bg: "#fffbeb",
           };
         return {
           label: status.nextSlot
             ? `${status.slot.open} — ${status.slot.close} · ${status.nextSlot.open} — ${status.nextSlot.close}`
             : `${status.slot.open} — ${status.slot.close}`,
-          color: "#828282",
+          color: theme.subtext,
           icon: "time-outline" as const,
-          bg: "#EEF4FF",
+          plain: true,
         };
       case "lunch_break":
         return {
           label: text.lunchReopens(status.reopensAt),
           color: "#d97706",
           icon: "restaurant-outline" as const,
-          bg: "#fffbeb",
         };
       case "closed":
         if (status.opensDay === "duty")
@@ -757,7 +756,6 @@ const CardItem = React.memo(function CardItem({
             label: text.dutyStartsOn(formatDate(status.opensAt, language)),
             color: "#7c3aed",
             icon: "calendar-outline" as const,
-            bg: "#f5f3ff",
           };
         return {
           label: text.opensAt(
@@ -766,17 +764,15 @@ const CardItem = React.memo(function CardItem({
           ),
           color: "#ef4444",
           icon: "time-outline" as const,
-          bg: "#fef2f2",
         };
       default:
         return {
           label: "—",
-          color: "#828282",
+          color: theme.subtext,
           icon: "time-outline" as const,
-          bg: "#EEF4FF",
         };
     }
-  }, [status, language, text]);
+  }, [status, language, text, theme]);
 
   const showDutyPeriod =
     (pharmacy.is_on_call || pharmacy.is_night_pharmacy) &&
@@ -943,10 +939,7 @@ const CardItem = React.memo(function CardItem({
           {/* schedule row */}
           <View style={styles.info_row}>
             <Text
-              style={[
-                styles.info_text,
-                { color: scheduleRow.color, fontWeight: "500" },
-              ]}
+              style={[styles.info_text, { color: scheduleRow.color }]}
               numberOfLines={1}
               ellipsizeMode="tail"
             >
@@ -955,7 +948,7 @@ const CardItem = React.memo(function CardItem({
             <View
               style={[
                 styles.info_icon_wrap,
-                { backgroundColor: scheduleRow.bg },
+                { backgroundColor: theme.cardIcon },
               ]}
             >
               <Ionicons

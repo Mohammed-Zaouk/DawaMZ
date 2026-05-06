@@ -5,7 +5,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useRef } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Linking, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Divider, List, Switch } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -22,6 +22,12 @@ export default function Menu() {
     setTimeout(() => {
       navigating.current = false;
     }, 500);
+  };
+
+  const handleLink = (url: string) => {
+    Linking.openURL(url).catch((err) =>
+      console.error("Failed to open URL:", err),
+    );
   };
 
   const getText = () => {
@@ -41,6 +47,11 @@ export default function Menu() {
         share: "شارك التطبيق",
         version: "الإصدار",
         currentLang: "العربية",
+        contact: "تواصل معنا",
+        email: "راسلنا عبر البريد",
+        instagram: "انستغرام",
+        facebook: "فيسبوك",
+        whatsapp: "واتساب",
       };
     } else if (language === "fr") {
       return {
@@ -58,6 +69,11 @@ export default function Menu() {
         share: "Partager l'application",
         version: "Version",
         currentLang: "Français",
+        contact: "Contactez-nous",
+        email: "Envoyer un e-mail",
+        instagram: "Instagram",
+        facebook: "Facebook",
+        whatsapp: "WhatsApp",
       };
     } else {
       return {
@@ -75,6 +91,11 @@ export default function Menu() {
         share: "Share the App",
         version: "Version",
         currentLang: "English",
+        contact: "Contact Us",
+        email: "Send us an Email",
+        instagram: "Instagram",
+        facebook: "Facebook",
+        whatsapp: "WhatsApp",
       };
     }
   };
@@ -156,6 +177,117 @@ export default function Menu() {
                   color="#2196F3"
                 />
               )}
+              style={styles.list_item}
+            />
+          </View>
+        </View>
+
+        {/* Contact Section */}
+        <View style={styles.section}>
+          <View style={styles.section_header_row}>
+            <Ionicons
+              name="chatbubble-ellipses-outline"
+              size={15}
+              color={theme.sectionHeader}
+            />
+            <Text
+              style={[styles.section_header, { color: theme.sectionHeader }]}
+            >
+              {text.contact}
+            </Text>
+          </View>
+          <View
+            style={[
+              styles.section_card,
+              { backgroundColor: theme.sectionCard },
+            ]}
+          >
+            <List.Item
+              title={text.email}
+              description="contact@dawamz.ma"
+              titleStyle={[styles.item_title, { color: theme.itemTitle }]}
+              descriptionStyle={[
+                styles.item_description,
+                { color: theme.itemDescription },
+              ]}
+              left={() => (
+                <View style={styles.icon_wrapper}>
+                  <Ionicons name="mail-outline" size={22} color="#2196F3" />
+                </View>
+              )}
+              right={() => (
+                <View style={styles.icon_wrapper}>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={theme.chevron}
+                  />
+                </View>
+              )}
+              onPress={() => handleLink("mailto:contact@dawamz.ma")}
+              style={styles.list_item}
+            />
+            <Divider style={styles.item_divider} />
+            <List.Item
+              title={text.whatsapp}
+              titleStyle={[styles.item_title, { color: theme.itemTitle }]}
+              left={() => (
+                <View style={styles.icon_wrapper}>
+                  <Ionicons name="logo-whatsapp" size={22} color="#25D366" />
+                </View>
+              )}
+              right={() => (
+                <View style={styles.icon_wrapper}>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={theme.chevron}
+                  />
+                </View>
+              )}
+              onPress={() => handleLink("https://wa.me/212600000000")}
+              style={styles.list_item}
+            />
+            <Divider style={styles.item_divider} />
+            <List.Item
+              title={text.instagram}
+              titleStyle={[styles.item_title, { color: theme.itemTitle }]}
+              left={() => (
+                <View style={styles.icon_wrapper}>
+                  <Ionicons name="logo-instagram" size={22} color="#E1306C" />
+                </View>
+              )}
+              right={() => (
+                <View style={styles.icon_wrapper}>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={theme.chevron}
+                  />
+                </View>
+              )}
+              onPress={() => handleLink("https://instagram.com/dawamz")}
+              style={styles.list_item}
+            />
+            <Divider style={styles.item_divider} />
+            <List.Item
+              title={text.facebook}
+              titleStyle={[styles.item_title, { color: theme.itemTitle }]}
+              left={() => (
+                <View style={styles.icon_wrapper}>
+                  <Ionicons name="logo-facebook" size={22} color="#1877F2" />
+                </View>
+              )}
+              right={() => (
+                <View style={styles.icon_wrapper}>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={theme.chevron}
+                  />
+                </View>
+              )}
+              onPress={() => handleLink("https://facebook.com/dawamz")}
               style={styles.list_item}
             />
           </View>
