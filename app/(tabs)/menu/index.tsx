@@ -245,7 +245,7 @@ export default function Menu() {
                   />
                 </View>
               )}
-              onPress={() => handleLink("https://wa.me/212600000000")}
+              onPress={() => handleLink("https://wa.me/212659911786")}
               style={styles.list_item}
             />
             <Divider style={styles.item_divider} />
@@ -266,7 +266,7 @@ export default function Menu() {
                   />
                 </View>
               )}
-              onPress={() => handleLink("https://instagram.com/dawamz")}
+              onPress={() => handleLink("https://www.instagram.com/dawa.mz/")}
               style={styles.list_item}
             />
             <Divider style={styles.item_divider} />
@@ -287,7 +287,11 @@ export default function Menu() {
                   />
                 </View>
               )}
-              onPress={() => handleLink("https://facebook.com/dawamz")}
+              onPress={() =>
+                handleLink(
+                  "https://www.facebook.com/people/DawaMZ/61589490633245/",
+                )
+              }
               style={styles.list_item}
             />
           </View>
