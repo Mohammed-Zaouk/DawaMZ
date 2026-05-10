@@ -204,7 +204,7 @@ export default function Menu() {
           >
             <List.Item
               title={text.email}
-              description="contact@dawamz.ma"
+              description="contact@dawamz.com"
               titleStyle={[styles.item_title, { color: theme.itemTitle }]}
               descriptionStyle={[
                 styles.item_description,
