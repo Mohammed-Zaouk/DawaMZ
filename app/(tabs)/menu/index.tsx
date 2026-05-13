@@ -224,7 +224,7 @@ export default function Menu() {
                   />
                 </View>
               )}
-              onPress={() => handleLink("mailto:contact@dawamz.ma")}
+              onPress={() => handleLink("mailto:contact@dawamz.com")}
               style={styles.list_item}
             />
             <Divider style={styles.item_divider} />
