@@ -18,7 +18,7 @@ export const lightTheme = {
   pageSubtitle: "#D9DEE3",
 
   // misc
-  sideLine: "rgba(255,255,255,0.35)",
+  sideLine: "rgba(111, 100, 100, 0.35)",
   chevron: "#B0C8E8",
   headerBg: "#BBDEFB",
   selectedBorder: "#2196F3",

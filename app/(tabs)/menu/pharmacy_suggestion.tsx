@@ -9,11 +9,13 @@ import { useRef, useState } from "react";
 import {
     Alert,
     KeyboardAvoidingView,
+    Modal,
     Platform,
     ScrollView,
     StyleSheet,
     Text,
     TextInput,
+    TouchableOpacity,
     View,
 } from "react-native";
 import { Button } from "react-native-paper";
@@ -72,6 +74,9 @@ function getText(lang: string) {
       limitTitle: "تم بلوغ الحد اليومي",
       limitReached: "لقد تجاوزت الحد اليومي للاقتراحات (3 في اليوم)",
       success: "تم إرسال اقتراحك بنجاح، شكراً لك!",
+      successTitle: "تم الإرسال",
+      successOk: "حسناً",
+      rateLimitNote: "يمكنك إرسال ما يصل إلى 3 اقتراحات يومياً",
     };
   } else if (lang === "fr") {
     return {
@@ -99,6 +104,9 @@ function getText(lang: string) {
       limitTitle: "Limite journalière atteinte",
       limitReached: "Vous avez atteint la limite quotidienne (3 par jour)",
       success: "Votre suggestion a été envoyée avec succès, merci !",
+      successTitle: "Envoyé !",
+      successOk: "OK",
+      rateLimitNote: "Vous pouvez soumettre jusqu'à 3 suggestions par jour",
     };
   } else {
     return {
@@ -125,6 +133,9 @@ function getText(lang: string) {
       limitTitle: "Daily Limit Reached",
       limitReached: "You've reached the daily submission limit (3 per day)",
       success: "Your suggestion was submitted successfully, thank you!",
+      successTitle: "Submitted!",
+      successOk: "OK",
+      rateLimitNote: "You can submit up to 3 suggestions per day",
     };
   }
 }
@@ -192,6 +203,79 @@ function Field({
   );
 }
 
+// ─── Success Modal ─────────────────────────────────────────────────────────────
+type SuccessModalProps = {
+  visible: boolean;
+  message: string;
+  title: string;
+  okLabel: string;
+  onClose: () => void;
+  theme: any;
+};
+
+function SuccessModal({
+  visible,
+  message,
+  title,
+  okLabel,
+  onClose,
+  theme,
+}: SuccessModalProps) {
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      statusBarTranslucent
+    >
+      <View style={styles.modal_overlay}>
+        <View style={[styles.modal_card, { backgroundColor: theme.contentBg }]}>
+          {/* Icon circle */}
+          <View
+            style={[
+              styles.modal_icon_circle,
+              { backgroundColor: theme.buttonBackground + "20" },
+            ]}
+          >
+            <Text
+              style={[styles.modal_icon, { color: theme.buttonBackground }]}
+            >
+              ✓
+            </Text>
+          </View>
+
+          <Text style={[styles.modal_title, { color: theme.itemTitle }]}>
+            {title}
+          </Text>
+          <Text
+            style={[styles.modal_message, { color: theme.itemDescription }]}
+          >
+            {message}
+          </Text>
+
+          <TouchableOpacity
+            style={[
+              styles.modal_button,
+              { backgroundColor: theme.buttonBackground },
+            ]}
+            onPress={onClose}
+            activeOpacity={0.85}
+          >
+            <Text
+              style={[
+                styles.modal_button_label,
+                { color: theme.buttonTextColor },
+              ]}
+            >
+              {okLabel}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function PharmacySuggestion() {
   const { language } = useLanguage();
@@ -205,6 +289,7 @@ export default function PharmacySuggestion() {
   const [phone, setPhone] = useState("");
   const [note, setNote] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const text = getText(language);
   const isRtl = language === "ar";
@@ -252,9 +337,7 @@ export default function PharmacySuggestion() {
       setPhone("");
       setNote("");
 
-      Alert.alert("✓", text.success, [
-        { text: "OK", onPress: () => handleNavigate("/(tabs)/menu") },
-      ]);
+      setShowSuccess(true);
     } catch (e) {
       Alert.alert(
         "Error",
@@ -280,6 +363,18 @@ export default function PharmacySuggestion() {
     >
       <BackgroundBubbles />
       <Header />
+
+      <SuccessModal
+        visible={showSuccess}
+        title={text.successTitle}
+        message={text.success}
+        okLabel={text.successOk}
+        theme={theme}
+        onClose={() => {
+          setShowSuccess(false);
+          handleNavigate("/(tabs)/menu");
+        }}
+      />
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -318,6 +413,34 @@ export default function PharmacySuggestion() {
               <View
                 style={[styles.title_line, { backgroundColor: theme.sideLine }]}
               />
+            </View>
+
+            {/* ── Rate limit note ── */}
+            <View
+              style={[
+                styles.rate_limit_note,
+                {
+                  backgroundColor: theme.buttonBackground + "15",
+                  borderColor: theme.buttonBackground + "40",
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.rate_limit_icon,
+                  { color: theme.buttonBackground },
+                ]}
+              >
+                ℹ
+              </Text>
+              <Text
+                style={[
+                  styles.rate_limit_text,
+                  { color: theme.itemDescription },
+                ]}
+              >
+                {text.rateLimitNote}
+              </Text>
             </View>
           </View>
 
@@ -445,7 +568,7 @@ const styles = StyleSheet.create({
   },
 
   // Title
-  title_section: { alignItems: "center", marginBottom: 20 },
+  title_section: { alignItems: "center", marginBottom: 20, gap: 12 },
   title_divider_row: {
     flexDirection: "row",
     alignItems: "center",
@@ -457,6 +580,28 @@ const styles = StyleSheet.create({
   title_arabic: { fontSize: 12, letterSpacing: 0.8 },
   title_main: { fontSize: 15, fontWeight: "700", letterSpacing: 0.1 },
   title_sub: { fontSize: 13, fontWeight: "400", letterSpacing: 0.1 },
+
+  // Rate limit note
+  rate_limit_note: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignSelf: "stretch",
+  },
+  rate_limit_icon: {
+    fontSize: 13,
+    fontWeight: "700",
+    lineHeight: 16,
+  },
+  rate_limit_text: {
+    fontSize: 12,
+    fontWeight: "500",
+    flex: 1,
+  },
 
   // Form
   form_scroll: { flex: 1 },
@@ -521,4 +666,63 @@ const styles = StyleSheet.create({
   },
   save_button_content: { height: 54 },
   save_button_label: { fontSize: 14, fontWeight: "700", letterSpacing: 0.4 },
+
+  // Success modal
+  modal_overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 32,
+  },
+  modal_card: {
+    width: "100%",
+    borderRadius: 24,
+    padding: 28,
+    alignItems: "center",
+    gap: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 12,
+  },
+  modal_icon_circle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  modal_icon: {
+    fontSize: 30,
+    fontWeight: "700",
+    lineHeight: 36,
+  },
+  modal_title: {
+    fontSize: 18,
+    fontWeight: "700",
+    letterSpacing: 0.2,
+    textAlign: "center",
+  },
+  modal_message: {
+    fontSize: 14,
+    fontWeight: "400",
+    lineHeight: 20,
+    textAlign: "center",
+    marginBottom: 6,
+  },
+  modal_button: {
+    marginTop: 6,
+    width: "100%",
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  modal_button_label: {
+    fontSize: 15,
+    fontWeight: "700",
+    letterSpacing: 0.3,
+  },
 });
