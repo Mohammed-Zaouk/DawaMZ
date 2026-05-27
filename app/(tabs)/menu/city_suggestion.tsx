@@ -48,7 +48,7 @@ async function checkAndRecordSubmission(): Promise<boolean> {
   return true;
 }
 
-// ─── Region type (matches Supabase `regions` table) ──────────────────────────
+// ─── Region type ──────────────────────────
 type Region = {
   id: string;
   name: string;
