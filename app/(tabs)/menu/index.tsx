@@ -3,9 +3,17 @@ import Header from "@/components/header";
 import { useLanguage } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
+import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import { useRef } from "react";
-import { Linking, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Linking,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { Divider, List, Switch } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -30,6 +38,40 @@ export default function Menu() {
     );
   };
 
+  // TODO: Replace with your Play Store / App Store link once published
+  const APP_URL = "https://www.dawamz.com";
+
+  // TODO: Replace YOUR_PACKAGE_NAME with e.g. "com.dawamz.app" once published
+  const PLAY_STORE_URL = "market://details?id=com.dawamz.app";
+  const PLAY_STORE_FALLBACK =
+    "https://play.google.com/store/apps/details?id=com.dawamz.app";
+
+  const handleRate = () => {
+    Linking.canOpenURL(PLAY_STORE_URL)
+      .then((supported) =>
+        Linking.openURL(supported ? PLAY_STORE_URL : PLAY_STORE_FALLBACK),
+      )
+      .catch((err) => console.error("Failed to open store:", err));
+  };
+
+  const appVersion = Constants.expoConfig?.version ?? "1.0.0";
+
+  const handleShare = async () => {
+    const shareMessages: Record<string, string> = {
+      ar: `اكتشف DawaMZ، التطبيق الذي يساعدك على إيجاد صيدلية المناوبة بسهولة!\n${APP_URL}`,
+      fr: `Découvrez DawaMZ, l'app pour trouver facilement une pharmacie de garde !\n${APP_URL}`,
+      en: `Check out DawaMZ, the app to easily find on-call pharmacies near you!\n${APP_URL}`,
+    };
+    try {
+      await Share.share({
+        message: shareMessages[language] ?? shareMessages.en,
+        url: APP_URL, // iOS only — shows a separate URL preview
+      });
+    } catch (err) {
+      console.error("Share error:", err);
+    }
+  };
+
   const getText = () => {
     if (language === "ar") {
       return {
@@ -43,6 +85,7 @@ export default function Menu() {
         terms: "شروط الخدمة",
         about: "حول",
         aboutApp: "حول DawaMZ",
+        website: "زيارة موقعنا",
         rate: "قيم التطبيق",
         share: "شارك التطبيق",
         version: "الإصدار",
@@ -70,6 +113,7 @@ export default function Menu() {
         terms: "Conditions d'utilisation",
         about: "À propos",
         aboutApp: "À propos de DawaMZ",
+        website: "Visiter notre site",
         rate: "Évaluer l'application",
         share: "Partager l'application",
         version: "Version",
@@ -97,6 +141,7 @@ export default function Menu() {
         terms: "Terms of Service",
         about: "About",
         aboutApp: "About DawaMZ",
+        website: "Visit our Website",
         rate: "Rate the App",
         share: "Share the App",
         version: "Version",
@@ -503,6 +548,33 @@ export default function Menu() {
               style={styles.list_item}
             />
             <Divider style={styles.item_divider} />
+            {/* Website Item */}
+            <List.Item
+              title={text.website}
+              description="www.dawamz.com"
+              titleStyle={[styles.item_title, { color: theme.itemTitle }]}
+              descriptionStyle={[
+                styles.item_description,
+                { color: theme.itemDescription },
+              ]}
+              left={() => (
+                <View style={styles.icon_wrapper}>
+                  <Ionicons name="globe-outline" size={22} color="#2196F3" />
+                </View>
+              )}
+              right={() => (
+                <View style={styles.icon_wrapper}>
+                  <Ionicons
+                    name="open-outline"
+                    size={20}
+                    color={theme.chevron}
+                  />
+                </View>
+              )}
+              onPress={() => handleLink("https://www.dawamz.com")}
+              style={styles.list_item}
+            />
+            <Divider style={styles.item_divider} />
             <List.Item
               title={text.rate}
               titleStyle={[styles.item_title, { color: theme.itemTitle }]}
@@ -520,7 +592,7 @@ export default function Menu() {
                   />
                 </View>
               )}
-              onPress={() => handleNavigate("/menu")}
+              onPress={handleRate}
               style={styles.list_item}
             />
             <Divider style={styles.item_divider} />
@@ -545,13 +617,13 @@ export default function Menu() {
                   />
                 </View>
               )}
-              onPress={() => handleNavigate("/menu")}
+              onPress={handleShare}
               style={styles.list_item}
             />
             <Divider style={styles.item_divider} />
             <List.Item
               title={text.version}
-              description="1.0.0"
+              description={appVersion}
               titleStyle={[styles.item_title, { color: theme.itemTitle }]}
               descriptionStyle={[
                 styles.item_description,
