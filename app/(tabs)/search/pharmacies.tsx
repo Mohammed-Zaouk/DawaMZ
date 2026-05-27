@@ -547,6 +547,7 @@ function EmptyState({
   isSearching: boolean;
   activeFilter: string;
 }) {
+  const router = useRouter();
   const getContent = () => {
     if (isSearching)
       return {
@@ -583,7 +584,12 @@ function EmptyState({
       <Text style={styles.empty_title}>{title}</Text>
       <Text style={styles.empty_subtitle}>{subtitle}</Text>
       {isSearching && (
-        <TouchableOpacity style={styles.suggest_button} onPress={() => {}}>
+        <TouchableOpacity
+          style={styles.suggest_button}
+          onPress={() => {
+            router.push("../menu/pharmacy_suggestion");
+          }}
+        >
           <Ionicons name="add-circle-outline" size={15} color="#ffffff" />
           <Text style={styles.suggest_button_label}>{text.suggestButton}</Text>
         </TouchableOpacity>

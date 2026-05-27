@@ -194,6 +194,7 @@ function EmptyState({
   text: any;
   isSearching: boolean;
 }) {
+  const router = useRouter();
   return (
     <View style={styles.empty_container}>
       <View style={styles.empty_icon_wrapper}>
@@ -210,7 +211,12 @@ function EmptyState({
         {isSearching ? text.noResultsSub : text.noDataSub}
       </Text>
       {isSearching && (
-        <TouchableOpacity style={styles.suggest_button} onPress={() => {}}>
+        <TouchableOpacity
+          style={styles.suggest_button}
+          onPress={() => {
+            router.push("../menu/city_suggestion");
+          }}
+        >
           <Ionicons name="add-circle-outline" size={15} color="#ffffff" />
           <Text style={styles.suggest_button_label}>{text.suggestButton}</Text>
         </TouchableOpacity>

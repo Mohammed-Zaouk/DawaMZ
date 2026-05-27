@@ -52,6 +52,11 @@ export default function Menu() {
         instagram: "انستغرام",
         facebook: "فيسبوك",
         whatsapp: "واتساب",
+        suggestions: "اقتراحات",
+        suggestPharmacy: "اقتراح صيدلية",
+        suggestPharmacyDesc: "أضف صيدلية غير مدرجة",
+        suggestCity: "اقتراح مدينة",
+        suggestCityDesc: "اطلب إضافة مدينة جديدة",
       };
     } else if (language === "fr") {
       return {
@@ -74,6 +79,11 @@ export default function Menu() {
         instagram: "Instagram",
         facebook: "Facebook",
         whatsapp: "WhatsApp",
+        suggestions: "Suggestions",
+        suggestPharmacy: "Suggérer une pharmacie",
+        suggestPharmacyDesc: "Ajouter une pharmacie manquante",
+        suggestCity: "Suggérer une ville",
+        suggestCityDesc: "Demander l'ajout d'une nouvelle ville",
       };
     } else {
       return {
@@ -96,6 +106,11 @@ export default function Menu() {
         instagram: "Instagram",
         facebook: "Facebook",
         whatsapp: "WhatsApp",
+        suggestions: "Suggestions",
+        suggestPharmacy: "Suggest a Pharmacy",
+        suggestPharmacyDesc: "Add a pharmacy that's not listed",
+        suggestCity: "Suggest a City",
+        suggestCityDesc: "Request a new city to be added",
       };
     }
   };
@@ -177,6 +192,80 @@ export default function Menu() {
                   color="#2196F3"
                 />
               )}
+              style={styles.list_item}
+            />
+          </View>
+        </View>
+
+        {/* Suggestions Section */}
+        <View style={styles.section}>
+          <View style={styles.section_header_row}>
+            <Ionicons
+              name="bulb-outline"
+              size={15}
+              color={theme.sectionHeader}
+            />
+            <Text
+              style={[styles.section_header, { color: theme.sectionHeader }]}
+            >
+              {text.suggestions}
+            </Text>
+          </View>
+          <View
+            style={[
+              styles.section_card,
+              { backgroundColor: theme.sectionCard },
+            ]}
+          >
+            <List.Item
+              title={text.suggestPharmacy}
+              description={text.suggestPharmacyDesc}
+              titleStyle={[styles.item_title, { color: theme.itemTitle }]}
+              descriptionStyle={[
+                styles.item_description,
+                { color: theme.itemDescription },
+              ]}
+              left={() => (
+                <View style={styles.icon_wrapper}>
+                  <Ionicons name="medkit-outline" size={22} color="#2196F3" />
+                </View>
+              )}
+              right={() => (
+                <View style={styles.icon_wrapper}>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={theme.chevron}
+                  />
+                </View>
+              )}
+              onPress={() => handleNavigate("/(tabs)/menu/pharmacy_suggestion")}
+              style={styles.list_item}
+            />
+            <Divider style={styles.item_divider} />
+            <List.Item
+              title={text.suggestCity}
+              description={text.suggestCityDesc}
+              titleStyle={[styles.item_title, { color: theme.itemTitle }]}
+              descriptionStyle={[
+                styles.item_description,
+                { color: theme.itemDescription },
+              ]}
+              left={() => (
+                <View style={styles.icon_wrapper}>
+                  <Ionicons name="location-outline" size={22} color="#2196F3" />
+                </View>
+              )}
+              right={() => (
+                <View style={styles.icon_wrapper}>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={theme.chevron}
+                  />
+                </View>
+              )}
+              onPress={() => handleNavigate("/(tabs)/menu/city_suggestion")}
               style={styles.list_item}
             />
           </View>

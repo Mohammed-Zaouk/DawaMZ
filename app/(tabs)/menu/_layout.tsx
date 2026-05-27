@@ -20,6 +20,14 @@ export default function MenuLayout() {
         name="about"
         options={{ title: "About", headerShown: false }}
       />
+      <Stack.Screen
+        name="pharmacy_suggestion"
+        options={{ title: "pharmacy_suggestion", headerShown: false }}
+      />
+      <Stack.Screen
+        name="city_suggestion"
+        options={{ title: "city_suggestion", headerShown: false }}
+      />
     </Stack>
   );
 }
