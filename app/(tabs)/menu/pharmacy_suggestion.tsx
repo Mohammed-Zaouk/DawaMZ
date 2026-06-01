@@ -7,16 +7,16 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { Button } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -322,11 +322,11 @@ export default function PharmacySuggestion() {
       }
 
       const { error } = await supabase.from("pharmacy_suggestions").insert({
-        name,
-        address,
-        phone,
-        ctiy: city,
-        note,
+        name: name.trim(),
+        city: city.trim(),
+        address: address.trim() || null,
+        phone: phone.trim() || null,
+        note: note.trim() || null,
       });
 
       if (error) throw error;
