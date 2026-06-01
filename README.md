@@ -4,10 +4,10 @@
 
 This is the **mobile version** of DawaMZ, a multilingual pharmacy finder available across two platforms:
 
-| Platform              | Repo                                                              | Status                |
-| --------------------- | ----------------------------------------------------------------- | --------------------- |
-| 📱 Mobile (this repo) | [dawamz-app](https://github.com/your-username/dawamz-app)         | Live on Android & iOS |
-| 🌐 Web (React + Vite) | [dawamz-website](https://github.com/your-username/dawamz-website) | Live at dawamz.com    |
+| Platform              | Repo                                                       | Status                |
+| --------------------- | ---------------------------------------------------------- | --------------------- |
+| 📱 Mobile (this repo) | [dawamz-app](https://github.com/Mohammed-Zaouk/DawaMZ)     | Live on Android & iOS |
+| 🌐 Web (React + Vite) | [dawamz-web](https://github.com/Mohammed-Zaouk/DawaMZ-web) | Live at dawamz.com    |
 
 Both platforms share the same Supabase backend — same data, same schedule logic, same multilingual content.
 
