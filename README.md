@@ -189,8 +189,6 @@ Recommended `eas.json` setup:
 
 Managed on Supabase with Row Level Security enabled on all tables. The public can only read pharmacy and city data.
 
-Key tables: `regions`, `cities`, `pharmacies`, `pharmacy_suggestions`
-
 ---
 
 ## License
