@@ -11,11 +11,17 @@
       "supportsTablet": true
     },
     "android": {
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#2196F3",
         "foregroundImage": "./assets/images/logo/logo.png",
         "monochromeImage": "./assets/images/logo/logo.png"
       },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "FOREGROUND_SERVICE"
+      ],
       "predictiveBackGestureEnabled": false,
       "package": "com.dawamzsorganization.dawamz"
     },
