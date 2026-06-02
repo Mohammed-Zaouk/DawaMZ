@@ -41,13 +41,15 @@ export default function Privacy() {
         section6Content:
           "جميع البيانات المخزنة محلياً على جهازك محمية بواسطة نظام تشغيل جهازك.",
         section7Title: "7. التطبيق مجاني تماماً",
-        section7Content:
-          "التطبيق مجاني 100٪ بدون إعلانات أو عمليات شراء داخل التطبيق.",
-        section8Title: "8. التغييرات على هذه السياسة",
+        section7Content: "التطبيق مجاني 100٪ بدون أي تكاليف.",
+        section8Title: "8. تحليل الاستخدام",
         section8Content:
-          "قد نقوم بتحديث سياسة الخصوصية من وقت لآخر. سيتم إخطارك بأي تغييرات مهمة.",
-        section9Title: "9. الاتصال بنا",
+          "نستخدم أدوات تحليل الاستخدام لفهم كيفية استخدام الزوار للتطبيق. تُجمع بيانات مجهولة الهوية مثل الصفحات المُزارة والوقت المُستغرق لتحسين تجربة المستخدم.",
+        section9Title: "9. التغييرات على هذه السياسة",
         section9Content:
+          "قد نقوم بتحديث سياسة الخصوصية من وقت لآخر. سيتم إخطارك بأي تغييرات مهمة.",
+        section10Title: "10. الاتصال بنا",
+        section10Content:
           "إذا كان لديك أسئلة حول هذه السياسة، يمكنك الاتصال بنا عبر صفحة التطبيق في متجر التطبيقات.",
       };
     } else if (language === "fr") {
@@ -75,13 +77,15 @@ export default function Privacy() {
         section6Content:
           "Toutes les données stockées localement sur votre appareil sont protégées par le système d'exploitation de votre appareil.",
         section7Title: "7. L'application est entièrement gratuite",
-        section7Content:
-          "L'application est 100 % gratuite sans publicités ni achats intégrés.",
-        section8Title: "8. Modifications de cette politique",
+        section7Content: "L'application est 100 % gratuite sans frais.",
+        section8Title: "8. Analyse du trafic",
         section8Content:
-          "Nous pouvons mettre à jour cette politique de confidentialité de temps en temps. Vous serez informé de tout changement important.",
-        section9Title: "9. Nous contacter",
+          "Nous utilisons des outils d'analyse pour comprendre comment les utilisateurs utilisent l'application. Des données anonymes telles que les pages visitées et le temps passé sont collectées pour améliorer l'expérience utilisateur.",
+        section9Title: "9. Modifications de cette politique",
         section9Content:
+          "Nous pouvons mettre à jour cette politique de confidentialité de temps en temps. Vous serez informé de tout changement important.",
+        section10Title: "10. Nous contacter",
+        section10Content:
           "Si vous avez des questions concernant cette politique, vous pouvez nous contacter via la page de l'application dans le magasin d'applications.",
       };
     } else {
@@ -109,13 +113,15 @@ export default function Privacy() {
         section6Content:
           "All data stored locally on your device is protected by your device's operating system.",
         section7Title: "7. The App is Completely Free",
-        section7Content:
-          "The app is 100% free with no ads or in-app purchases.",
-        section8Title: "8. Changes to This Policy",
+        section7Content: "The app is 100% free with no costs.",
+        section8Title: "8. Analytics",
         section8Content:
-          "We may update this privacy policy from time to time. You will be notified of any significant changes.",
-        section9Title: "9. Contact Us",
+          "We use analytics tools to understand how users interact with the app. Anonymous data such as screens visited and time spent is collected to improve the user experience.",
+        section9Title: "9. Changes to This Policy",
         section9Content:
+          "We may update this privacy policy from time to time. You will be notified of any significant changes.",
+        section10Title: "10. Contact Us",
+        section10Content:
           "If you have questions about this policy, you can contact us through the app page in the app store.",
       };
     }
@@ -133,6 +139,7 @@ export default function Privacy() {
     { title: text.section7Title, content: text.section7Content },
     { title: text.section8Title, content: text.section8Content },
     { title: text.section9Title, content: text.section9Content },
+    { title: text.section10Title, content: text.section10Content },
   ];
 
   return (
@@ -204,12 +211,10 @@ export default function Privacy() {
 }
 
 const styles = StyleSheet.create({
-  // Screen
   screen_container: {
     flex: 1,
     gap: 50,
   },
-  // Content
   content_container: {
     flex: 1,
     borderTopLeftRadius: 28,
@@ -226,7 +231,6 @@ const styles = StyleSheet.create({
   scroll_content: {
     paddingHorizontal: 22,
   },
-  // Title
   title: {
     fontSize: 28,
     fontWeight: "800",
@@ -238,7 +242,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     letterSpacing: 0.2,
   },
-  // Intro
   intro: {
     fontSize: 15,
     lineHeight: 24,
@@ -257,7 +260,6 @@ const styles = StyleSheet.create({
     borderRightColor: "#2196F3",
     borderLeftWidth: 0,
   },
-  // Sections
   section_title: {
     fontSize: 14,
     fontWeight: "700",
@@ -278,7 +280,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 1,
   },
-  // Footer
   footer_spacing: {
     height: 40,
   },
