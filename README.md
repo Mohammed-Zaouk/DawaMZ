@@ -13,7 +13,39 @@ Both platforms share the same Supabase backend — same data, same schedule logi
 
 The mobile app handles the full native experience: GPS-based nearest pharmacy detection, interactive maps with turn-by-turn routing, offline-friendly UI, and dark mode — while the web version focuses on discoverability and SEO.
 
-**Live:** [Google Play Store](https://play.google.com/store/apps/details?id=your.app.id)
+**Live:** [Google Play Store](https://play.google.com/store/apps/details?id=com.dawamzsorganization.dawamz)
+
+---
+
+## How Data Gets Into the App
+
+Pharmacy and on-call schedule data reaches Supabase through two complementary approaches:
+
+### 🤖 Automated Scraping (Primary)
+
+A private Python scraper runs automatically via GitHub Actions on a daily schedule. It collects up-to-date on-call pharmacy data — cities, pharmacies, and full details — and pushes everything directly to Supabase.
+
+The scraper is kept private for security and privacy reasons, but its pipeline looks like this:
+
+```
+GitHub Actions (scheduled daily)
+  ↓
+scrapers/cities.py       → collect all cities
+  ↓
+scrapers/pharmacies.py   → for each city, collect pharmacies
+  ↓
+scrapers/details.py      → for each pharmacy, collect full details
+  ↓
+parsers/pharmacy.py      → clean and structure the data
+  ↓
+seeds/push.py            → push to Supabase 🚀
+```
+
+This keeps the database fresh without any manual intervention.
+
+### 🗺️ Manual Approach (Supplementary)
+
+For pharmacies or cities not covered by the scraper, data can be added manually through direct Supabase inserts or via the in-app suggestion system, where users can submit missing pharmacies or request new cities to be added.
 
 ---
 

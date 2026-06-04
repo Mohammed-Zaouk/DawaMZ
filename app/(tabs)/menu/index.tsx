@@ -38,13 +38,12 @@ export default function Menu() {
     );
   };
 
-  // TODO: Replace with your Play Store / App Store link once published
-  const APP_URL = "https://www.dawamz.com";
+  const APP_URL =
+    "https://play.google.com/store/apps/details?id=com.dawamzsorganization.dawamz";
 
-  // TODO: Replace YOUR_PACKAGE_NAME with e.g. "com.dawamz.app" once published
-  const PLAY_STORE_URL = "market://details?id=com.dawamz.app";
+  const PLAY_STORE_URL = "market://details?id=com.dawamzsorganization.dawamz";
   const PLAY_STORE_FALLBACK =
-    "https://play.google.com/store/apps/details?id=com.dawamz.app";
+    "https://play.google.com/store/apps/details?id=com.dawamzsorganization.dawamz";
 
   const handleRate = () => {
     Linking.canOpenURL(PLAY_STORE_URL)
