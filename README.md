@@ -148,12 +148,6 @@ context/
 ├── LanguageContext.tsx
 └── ThemeContext.tsx
 
-data/                            # Static/seed data
-scripts/
-├── seedCities.ts
-├── seedPharmacies.ts
-└── seedRegions.ts
-
 services/
 └── supabase.ts
 
