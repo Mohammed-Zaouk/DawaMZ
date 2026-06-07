@@ -30,6 +30,20 @@ const toMinutes = (time: string) => {
 const is24Hours = (slots: TimeRange[]) =>
   slots.some((s) => s.open === "00:00" && s.close === "23:59");
 
+const getTodayString = () => {
+  const now = new Date();
+  // Always compute today's date in Morocco time (UTC+1)
+  // regardless of the user's device timezone
+  const moroccoOffset = 60; // UTC+1 in minutes
+  const moroccoTime = new Date(
+    now.getTime() + (moroccoOffset - now.getTimezoneOffset()) * 60000,
+  );
+  const y = moroccoTime.getFullYear();
+  const m = String(moroccoTime.getMonth() + 1).padStart(2, "0");
+  const d = String(moroccoTime.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
+
 export type ScheduleStatus =
   | { type: "always_open" }
   | {
