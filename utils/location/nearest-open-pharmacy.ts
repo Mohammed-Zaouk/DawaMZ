@@ -16,13 +16,7 @@ export const findNearestOpenPharmacy = async (
   }
 
   const openPharmacies = pharmacies.filter((p) =>
-    isOpenNow(
-      p.schedule,
-      p.is_on_call ?? false,
-      p.duty_start,
-      p.duty_end,
-      p.is_night_pharmacy ?? false,
-    ),
+    isOpenNow(p.schedule, p.is_on_call ?? false, p.is_night_pharmacy ?? false),
   );
 
   let nearest = null;

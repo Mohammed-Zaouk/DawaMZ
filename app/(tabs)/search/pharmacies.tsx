@@ -283,8 +283,6 @@ export default function PharmaciesPage() {
         const open = isOpenNow(
           pharmacy.schedule,
           pharmacy.is_on_call ?? false,
-          pharmacy.duty_start,
-          pharmacy.duty_end,
           pharmacy.is_night_pharmacy ?? false,
         );
         if (activeFilter === "night")
@@ -623,8 +621,6 @@ const CardItem = React.memo(function CardItem({
       getScheduleStatus(
         pharmacy.schedule,
         pharmacy.is_on_call ?? false,
-        pharmacy.duty_start,
-        pharmacy.duty_end,
         pharmacy.is_night_pharmacy ?? false,
       ),
     [pharmacy],
