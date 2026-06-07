@@ -30,20 +30,6 @@ const toMinutes = (time: string) => {
 const is24Hours = (slots: TimeRange[]) =>
   slots.some((s) => s.open === "00:00" && s.close === "23:59");
 
-const getTodayString = () => {
-  const now = new Date();
-  // Always compute today's date in Morocco time (UTC+1)
-  // regardless of the user's device timezone
-  const moroccoOffset = 60; // UTC+1 in minutes
-  const moroccoTime = new Date(
-    now.getTime() + (moroccoOffset - now.getTimezoneOffset()) * 60000,
-  );
-  const y = moroccoTime.getFullYear();
-  const m = String(moroccoTime.getMonth() + 1).padStart(2, "0");
-  const d = String(moroccoTime.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-};
-
 export type ScheduleStatus =
   | { type: "always_open" }
   | {
@@ -59,18 +45,15 @@ export type ScheduleStatus =
 export function getScheduleStatus(
   schedule: Schedule | null,
   isOnCall: boolean,
-  dutyStart: string,
-  dutyEnd: string,
+  dutyStart: string | null,
+  dutyEnd: string | null,
   isNightPharmacy: boolean,
 ): ScheduleStatus {
-  // on call with duty dates
-  if ((isOnCall || isNightPharmacy) && dutyStart && dutyEnd) {
+  if (isOnCall || isNightPharmacy) {
     if (dutyStart === "24h" || dutyEnd === "24h")
       return { type: "always_open" };
-    const today = getTodayString();
-    if (today >= dutyStart && today <= dutyEnd) return { type: "always_open" };
-    if (today < dutyStart) {
-      return { type: "closed", opensAt: dutyStart, opensDay: "duty" };
+    else {
+      return { type: "always_open" };
     }
   }
 
